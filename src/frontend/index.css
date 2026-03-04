@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+
+    /* Dr. Greens Brand Tokens — OKLCH raw L C H */
+    /* Deep Forest Green */
+    --primary: 0.32 0.11 150;
+    --primary-foreground: 0.97 0.01 95;
+
+    /* Warm off-white background */
+    --background: 0.97 0.015 95;
+    --foreground: 0.18 0.02 150;
+
+    /* Card: slightly warmer white */
+    --card: 0.99 0.008 90;
+    --card-foreground: 0.18 0.02 150;
+
+    /* Popover */
+    --popover: 0.99 0.008 90;
+    --popover-foreground: 0.18 0.02 150;
+
+    /* Secondary: medium sage green */
+    --secondary: 0.88 0.04 145;
+    --secondary-foreground: 0.22 0.07 150;
+
+    /* Muted: soft greenish grey */
+    --muted: 0.93 0.02 140;
+    --muted-foreground: 0.45 0.04 150;
+
+    /* Accent: earthy amber */
+    --accent: 0.72 0.14 72;
+    --accent-foreground: 0.12 0.02 70;
+
+    /* Destructive */
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+
+    /* Border & input */
+    --border: 0.88 0.03 145;
+    --input: 0.88 0.03 145;
+    --ring: 0.32 0.11 150;
+
+    /* Chart */
+    --chart-1: 0.32 0.11 150;
+    --chart-2: 0.72 0.14 72;
+    --chart-3: 0.55 0.08 145;
+    --chart-4: 0.82 0.10 95;
+    --chart-5: 0.45 0.12 35;
+
+    /* Sidebar */
+    --sidebar: 0.97 0.015 95;
+    --sidebar-foreground: 0.18 0.02 150;
+    --sidebar-primary: 0.32 0.11 150;
+    --sidebar-primary-foreground: 0.97 0.01 95;
+    --sidebar-accent: 0.88 0.04 145;
+    --sidebar-accent-foreground: 0.22 0.07 150;
+    --sidebar-border: 0.88 0.03 145;
+    --sidebar-ring: 0.32 0.11 150;
+  }
+
+  .dark {
+    --background: 0.12 0.03 150;
+    --foreground: 0.94 0.02 95;
+    --card: 0.16 0.04 150;
+    --card-foreground: 0.94 0.02 95;
+    --popover: 0.16 0.04 150;
+    --popover-foreground: 0.94 0.02 95;
+    --primary: 0.65 0.14 150;
+    --primary-foreground: 0.10 0.02 150;
+    --secondary: 0.22 0.05 150;
+    --secondary-foreground: 0.88 0.04 145;
+    --muted: 0.22 0.05 150;
+    --muted-foreground: 0.60 0.04 150;
+    --accent: 0.72 0.14 72;
+    --accent-foreground: 0.12 0.02 70;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.205 0 0;
+    --border: 0.25 0.05 150;
+    --input: 0.25 0.05 150;
+    --ring: 0.65 0.14 150;
+    --chart-1: 0.65 0.14 150;
+    --chart-2: 0.72 0.14 72;
+    --chart-3: 0.55 0.08 145;
+    --chart-4: 0.82 0.10 95;
+    --chart-5: 0.45 0.12 35;
+    --sidebar: 0.12 0.03 150;
+    --sidebar-foreground: 0.94 0.02 95;
+    --sidebar-primary: 0.65 0.14 150;
+    --sidebar-primary-foreground: 0.10 0.02 150;
+    --sidebar-accent: 0.22 0.05 150;
+    --sidebar-accent-foreground: 0.88 0.04 145;
+    --sidebar-border: 0.25 0.05 150;
+    --sidebar-ring: 0.65 0.14 150;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .grain-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+}

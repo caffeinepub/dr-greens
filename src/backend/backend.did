@@ -1,0 +1,71 @@
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type Stats = 
+ record {
+   cancelledCount: nat;
+   deliveredCount: nat;
+   pendingCount: nat;
+   processingCount: nat;
+   totalOrders: nat;
+   totalRevenue: float64;
+ };
+type Product = 
+ record {
+   description: text;
+   id: nat;
+   isActive: bool;
+   name: text;
+   price: float64;
+   stock: nat;
+   unit: text;
+ };
+type Order = 
+ record {
+   createdAt: nat64;
+   customerName: text;
+   email: text;
+   id: nat;
+   notes: text;
+   phone: text;
+   productId: nat;
+   productName: text;
+   quantity: nat;
+   status: text;
+   totalPrice: float64;
+ };
+service : {
+  _initializeAccessControlWithSecret: (userSecret: text) -> ();
+  addProduct: (name: text, description: text, price: float64, unit: text,
+   stock: nat) -> (nat);
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  deactivateProduct: (id: nat) -> (variant {
+                                     err: text;
+                                     ok;
+                                   });
+  exportOrdersCSV: () -> (text) query;
+  getAllOrders: (statusFilter: opt text) -> (vec Order) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getOrderStats: () -> (Stats) query;
+  getProductById: (id: nat) -> (opt Product) query;
+  getProducts: () -> (vec Product) query;
+  isCallerAdmin: () -> (bool) query;
+  placeOrder: (productId: nat, customerName: text, email: text, phone: 
+   text, quantity: nat, notes: text) -> (variant {
+                                           err: text;
+                                           ok: nat;
+                                         });
+  updateOrderStatus: (orderId: nat, newStatus: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  updateProduct: (id: nat, name: text, description: text, price: float64,
+   unit: text, stock: nat, isActive: bool) -> (variant {
+                                                 err: text;
+                                                 ok;
+                                               });
+}
