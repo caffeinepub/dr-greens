@@ -15,11 +15,11 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   type BackendBanner,
-  useCreateBanner,
-  useDeleteBanner,
-  useGetAllBanners,
-  useUpdateBanner,
-} from "@/hooks/useQueries";
+  useCreateBannerAdmin,
+  useDeleteBannerAdmin,
+  useGetAllBannersAdmin,
+  useUpdateBannerAdmin,
+} from "@/hooks/useAdminQueries";
 import {
   AlertTriangle,
   Edit,
@@ -60,10 +60,10 @@ export function AdminBanners() {
   const [form, setForm] = useState<BannerFormState>(defaultForm);
   const [deleteTarget, setDeleteTarget] = useState<BackendBanner | null>(null);
 
-  const { data: banners = [], isLoading } = useGetAllBanners();
-  const createBanner = useCreateBanner();
-  const updateBanner = useUpdateBanner();
-  const deleteBanner = useDeleteBanner();
+  const { data: banners = [], isLoading } = useGetAllBannersAdmin();
+  const createBanner = useCreateBannerAdmin();
+  const updateBanner = useUpdateBannerAdmin();
+  const deleteBanner = useDeleteBannerAdmin();
 
   function openAddModal() {
     setEditBanner(null);

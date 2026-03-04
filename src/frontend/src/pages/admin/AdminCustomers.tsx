@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetAllCustomerProfiles } from "@/hooks/useQueries";
+import { useGetAllCustomerProfilesAdmin } from "@/hooks/useAdminQueries";
 import { ExternalLink, Search, Users } from "lucide-react";
 import { useState } from "react";
 
@@ -23,7 +23,7 @@ function formatDate(ns: bigint) {
 
 export function AdminCustomers() {
   const [search, setSearch] = useState("");
-  const { data: customers = [], isLoading } = useGetAllCustomerProfiles();
+  const { data: customers = [], isLoading } = useGetAllCustomerProfilesAdmin();
 
   const searchLower = search.toLowerCase().trim();
   const filtered = searchLower

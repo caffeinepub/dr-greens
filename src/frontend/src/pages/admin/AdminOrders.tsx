@@ -18,10 +18,10 @@ import {
 } from "@/components/ui/table";
 import {
   type BackendOrder,
-  useExportOrdersCSV,
-  useGetAllOrders,
-  useUpdateOrderStatus,
-} from "@/hooks/useQueries";
+  useExportOrdersCSVAdmin,
+  useGetAllOrdersAdmin,
+  useUpdateOrderStatusAdmin,
+} from "@/hooks/useAdminQueries";
 import {
   ChevronLeft,
   ChevronRight,
@@ -101,9 +101,9 @@ export function AdminOrders() {
   const [page, setPage] = useState(1);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
-  const { data: orders = [], isLoading } = useGetAllOrders();
-  const updateStatus = useUpdateOrderStatus();
-  const exportCSV = useExportOrdersCSV();
+  const { data: orders = [], isLoading } = useGetAllOrdersAdmin();
+  const updateStatus = useUpdateOrderStatusAdmin();
+  const exportCSV = useExportOrdersCSVAdmin();
 
   // Filter by tab
   const tabFiltered =

@@ -2,11 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useGetAllOrders,
-  useGetOrderStats,
-  useGetProducts,
-  useGetStoreSettings,
-} from "@/hooks/useQueries";
+  useGetAllOrdersAdmin,
+  useGetOrderStatsAdmin,
+  useGetProductsAdmin,
+  useGetStoreSettingsAdmin,
+} from "@/hooks/useAdminQueries";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -72,10 +72,12 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function AdminDashboard() {
-  const { data: stats, isLoading: statsLoading } = useGetOrderStats();
-  const { data: orders = [], isLoading: ordersLoading } = useGetAllOrders();
-  const { data: products = [], isLoading: productsLoading } = useGetProducts();
-  const { data: storeSettings } = useGetStoreSettings();
+  const { data: stats, isLoading: statsLoading } = useGetOrderStatsAdmin();
+  const { data: orders = [], isLoading: ordersLoading } =
+    useGetAllOrdersAdmin();
+  const { data: products = [], isLoading: productsLoading } =
+    useGetProductsAdmin();
+  const { data: storeSettings } = useGetStoreSettingsAdmin();
 
   const lowStockThreshold = storeSettings
     ? Number(storeSettings.lowStockThreshold)

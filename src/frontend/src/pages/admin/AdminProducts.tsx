@@ -23,11 +23,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   type BackendProduct,
-  useAddProduct,
-  useDeactivateProduct,
-  useGetProducts,
-  useUpdateProduct,
-} from "@/hooks/useQueries";
+  useAddProductAdmin,
+  useDeactivateProductAdmin,
+  useGetProductsAdmin,
+  useUpdateProductAdmin,
+} from "@/hooks/useAdminQueries";
 import {
   AlertTriangle,
   Boxes,
@@ -78,10 +78,10 @@ export function AdminProducts() {
   const [deactivateTarget, setDeactivateTarget] =
     useState<BackendProduct | null>(null);
 
-  const { data: products = [], isLoading } = useGetProducts();
-  const addProduct = useAddProduct();
-  const updateProduct = useUpdateProduct();
-  const deactivateProduct = useDeactivateProduct();
+  const { data: products = [], isLoading } = useGetProductsAdmin();
+  const addProduct = useAddProductAdmin();
+  const updateProduct = useUpdateProductAdmin();
+  const deactivateProduct = useDeactivateProductAdmin();
 
   function openAddModal() {
     setEditProduct(null);

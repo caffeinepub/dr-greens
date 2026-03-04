@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetContactSubmissions } from "@/hooks/useQueries";
+import { useGetContactSubmissionsAdmin } from "@/hooks/useAdminQueries";
 import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
@@ -25,7 +25,7 @@ function formatDate(ns: bigint) {
 
 export function AdminContacts() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const { data: submissions = [], isLoading } = useGetContactSubmissions();
+  const { data: submissions = [], isLoading } = useGetContactSubmissionsAdmin();
 
   const sorted = [...submissions].sort((a, b) =>
     Number(b.createdAt - a.createdAt),

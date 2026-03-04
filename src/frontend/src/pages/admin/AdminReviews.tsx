@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetAllReviews } from "@/hooks/useQueries";
+import { useGetAllReviewsAdmin } from "@/hooks/useAdminQueries";
 import { MessageSquare, Search, Star } from "lucide-react";
 import { useState } from "react";
 
@@ -43,7 +43,7 @@ function StarDisplay({ rating }: { rating: number }) {
 
 export function AdminReviews() {
   const [search, setSearch] = useState("");
-  const { data: reviews = [], isLoading } = useGetAllReviews();
+  const { data: reviews = [], isLoading } = useGetAllReviewsAdmin();
 
   const filtered = search.trim()
     ? reviews.filter(

@@ -1,31 +1,31 @@
 # Verdant Greens
 
 ## Current State
-The app has a customer storefront and an admin panel. Customers can add products to a cart (CartDrawer), then click "Checkout" to open a CartCheckoutModal (dialog) where they fill in their details, choose a delivery date/slot, and place the order. Orders are saved in the backend and visible in the admin panel.
 
-The CartDrawer shows cart items, quantity controls, pricing, and a "Checkout" button. The CartCheckoutModal handles the multi-step form: form → OTP → success.
+The app has two parts on a single frontend:
+- **Customer app** (default route): form-based login stored in localStorage, cart + checkout places orders via `placeOrder` backend call using an anonymous actor.
+- **Admin app** (`#/admin`): email/password login stored in localStorage (`useAdminAuth`), with all backend calls going through `useActor` which uses Internet Identity for identity.
+
+**Root problem**: The admin email/password login (`useAdminAuth`) only sets a localStorage flag. It does NOT authenticate with Internet Identity. So the `useActor` hook always creates an anonymous actor for the admin panel. All admin backend calls (`getAllOrders`, `updateProduct`, `updateStoreSettings`, `getOrderStats`, etc.) require admin role and silently fail because the caller is anonymous.
+
+Customer orders DO save to the blockchain, but the admin cannot see them because it lacks an authenticated + admin-initialized actor.
 
 ## Requested Changes (Diff)
 
 ### Add
-- A "Place Order" tab/step directly inside the CartDrawer (as an inline second panel/step), so the checkout flow is contained within the cart side panel rather than opening a separate modal dialog.
-- The "Place Order" step should show: order summary, customer detail fields (pre-filled from profile), delivery date and time slot selectors, notes, Cash on Delivery badge, and a "Place Order" button.
-- After successful order placement, show a confirmation step inside the drawer with order number(s), OTP code, and a "Done" button that clears the cart.
+- A dedicated admin actor hook (`useAdminActor`) that is initialized with the Caffeine admin token (from URL params) regardless of Internet Identity, giving admin-level access. This bypasses the need for Internet Identity in the admin panel.
 
 ### Modify
-- CartDrawer: add a two-step view — "Cart" view and "Place Order" view — toggled via a tab or a "Proceed to Place Order" button replacing the existing "Checkout" button.
-- The existing CartCheckoutModal component can be kept but is no longer triggered from the cart drawer; instead the inline flow handles it.
-- Ensure orders placed via the drawer are still submitted to the backend via `placeOrder` mutation and appear in the admin panel.
+- `useActor.ts`: extract the admin token initialization logic so it can be reused.
+- All admin page hooks (`useGetAllOrders`, `useGetOrderStats`, `useUpdateOrderStatus`, `useUpdateProduct`, `useAddProduct`, `useDeactivateProduct`, `useGetAllCustomerProfiles`, `useGetContactSubmissions`, `useExportOrdersCSV`, `useGetAllBanners`, `useGetAllReviews`, `useUpdateStoreSettings`, `useCreateBanner`, `useUpdateBanner`, `useDeleteBanner`) need to use an admin-authenticated actor.
+- The `AdminApp` context should provide an admin actor and all admin queries should use it.
 
 ### Remove
-- The separate CartCheckoutModal dialog flow triggered from the CartDrawer (replace with inline drawer step).
+- Nothing removed from backend.
 
 ## Implementation Plan
-1. Refactor `CartDrawer.tsx` to support two views: `"cart"` (existing) and `"order"` (new Place Order step).
-2. In the `"order"` view, embed the form fields, delivery date/slot, notes, and Cash on Delivery badge inline in the drawer's scroll area.
-3. Wire the `usePlaceOrder` mutation inside CartDrawer for the inline order step.
-4. On success, show a confirmation panel inside the drawer with order numbers and OTP code.
-5. Replace the "Checkout" button with "Proceed to Place Order" (or similar) that switches to the order step.
-6. Add a back button in the order step to return to the cart.
-7. Remove or disconnect the CartCheckoutModal trigger from the CartDrawer (keep the component file in case it's used elsewhere).
-8. Ensure `onCheckout` prop is no longer needed or update callers accordingly.
+
+1. Create `useAdminActor.ts` hook that creates an actor initialized with the admin token (from `caffeineAdminToken` URL param), giving it admin permissions. This actor is created once and cached.
+2. Create a separate `useAdminQueries.ts` (or modify `useQueries.ts`) with admin-specific versions of hooks that use the admin actor instead of the regular user actor.
+3. Update all admin pages to use the admin-specific hooks.
+4. Ensure customer `placeOrder` continues to use the anonymous actor (no auth required since backend allows anonymous orders).

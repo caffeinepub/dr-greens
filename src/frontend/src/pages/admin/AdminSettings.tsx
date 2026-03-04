@@ -5,9 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  useGetStoreSettings,
-  useUpdateStoreSettings,
-} from "@/hooks/useQueries";
+  useGetStoreSettingsAdmin,
+  useUpdateStoreSettingsAdmin,
+} from "@/hooks/useAdminQueries";
 import {
   Globe,
   Loader2,
@@ -37,8 +37,8 @@ const defaultForm: SettingsForm = {
 
 export function AdminSettings() {
   const [form, setForm] = useState<SettingsForm>(defaultForm);
-  const { data: settings, isLoading } = useGetStoreSettings();
-  const updateSettings = useUpdateStoreSettings();
+  const { data: settings, isLoading } = useGetStoreSettingsAdmin();
+  const updateSettings = useUpdateStoreSettingsAdmin();
 
   // Populate form when settings load
   useEffect(() => {
