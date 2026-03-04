@@ -301,7 +301,10 @@ export function AdminOrders() {
                       Status
                     </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden xl:table-cell">
-                      Date
+                      Delivery
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden xl:table-cell">
+                      Ordered
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -369,6 +372,20 @@ export function AdminOrders() {
                                 ))}
                               </SelectContent>
                             </Select>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground hidden xl:table-cell whitespace-nowrap">
+                          {order.deliveryDate ? (
+                            <div>
+                              <div>{order.deliveryDate}</div>
+                              {order.deliverySlot && (
+                                <div className="text-muted-foreground/70">
+                                  {order.deliverySlot}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/50">—</span>
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground hidden xl:table-cell whitespace-nowrap">

@@ -13,6 +13,14 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Banner = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'badgeText' : IDL.Text,
+  'createdAt' : IDL.Nat64,
+  'description' : IDL.Text,
+  'isActive' : IDL.Bool,
+});
 export const CustomerProfile = IDL.Record({
   'principal' : IDL.Principal,
   'name' : IDL.Text,
@@ -27,13 +35,31 @@ export const Order = IDL.Record({
   'customerName' : IDL.Text,
   'status' : IDL.Text,
   'createdAt' : IDL.Nat64,
+  'deliveryDate' : IDL.Text,
   'productId' : IDL.Nat,
   'productName' : IDL.Text,
+  'deliverySlot' : IDL.Text,
   'email' : IDL.Text,
   'notes' : IDL.Text,
+  'discount' : IDL.Float64,
   'quantity' : IDL.Nat,
   'phone' : IDL.Text,
   'totalPrice' : IDL.Float64,
+});
+export const Review = IDL.Record({
+  'id' : IDL.Nat,
+  'customerName' : IDL.Text,
+  'createdAt' : IDL.Nat64,
+  'productId' : IDL.Nat,
+  'productName' : IDL.Text,
+  'comment' : IDL.Text,
+  'rating' : IDL.Nat,
+  'customerEmail' : IDL.Text,
+});
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
 });
 export const ContactSubmission = IDL.Record({
   'id' : IDL.Nat,
@@ -50,6 +76,7 @@ export const Stats = IDL.Record({
   'deliveredCount' : IDL.Nat,
   'totalRevenue' : IDL.Float64,
   'processingCount' : IDL.Nat,
+  'outForDeliveryCount' : IDL.Nat,
 });
 export const Product = IDL.Record({
   'id' : IDL.Nat,
@@ -60,6 +87,13 @@ export const Product = IDL.Record({
   'stock' : IDL.Nat,
   'price' : IDL.Float64,
 });
+export const StoreSettings = IDL.Record({
+  'lowStockThreshold' : IDL.Nat,
+  'deliveryZones' : IDL.Text,
+  'businessAddress' : IDL.Text,
+  'whatsappNumber' : IDL.Text,
+  'isStoreOpen' : IDL.Bool,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -69,18 +103,32 @@ export const idlService = IDL.Service({
       [],
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'createBanner' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
   'deactivateProduct' : IDL.Func(
       [IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'deleteBanner' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'exportOrdersCSV' : IDL.Func([], [IDL.Text], ['query']),
+  'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
+  'getAllBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
   'getAllCustomerProfiles' : IDL.Func(
       [],
       [IDL.Vec(CustomerProfile)],
       ['query'],
     ),
   'getAllOrders' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Vec(Order)], ['query']),
+  'getAllReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getContactSubmissions' : IDL.Func(
       [],
@@ -90,10 +138,26 @@ export const idlService = IDL.Service({
   'getMyProfile' : IDL.Func([], [IDL.Opt(CustomerProfile)], ['query']),
   'getOrderStats' : IDL.Func([], [Stats], ['query']),
   'getProductById' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
+  'getProductReviews' : IDL.Func([IDL.Nat], [IDL.Vec(Review)], ['query']),
   'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'getStoreSettings' : IDL.Func([], [StoreSettings], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'placeOrder' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
@@ -102,9 +166,20 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'submitContactForm' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'submitReview' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'updateBanner' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'updateOrderStatus' : IDL.Func(
@@ -117,6 +192,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'updateStoreSettings' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -126,6 +206,14 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const Banner = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'badgeText' : IDL.Text,
+    'createdAt' : IDL.Nat64,
+    'description' : IDL.Text,
+    'isActive' : IDL.Bool,
   });
   const CustomerProfile = IDL.Record({
     'principal' : IDL.Principal,
@@ -141,13 +229,31 @@ export const idlFactory = ({ IDL }) => {
     'customerName' : IDL.Text,
     'status' : IDL.Text,
     'createdAt' : IDL.Nat64,
+    'deliveryDate' : IDL.Text,
     'productId' : IDL.Nat,
     'productName' : IDL.Text,
+    'deliverySlot' : IDL.Text,
     'email' : IDL.Text,
     'notes' : IDL.Text,
+    'discount' : IDL.Float64,
     'quantity' : IDL.Nat,
     'phone' : IDL.Text,
     'totalPrice' : IDL.Float64,
+  });
+  const Review = IDL.Record({
+    'id' : IDL.Nat,
+    'customerName' : IDL.Text,
+    'createdAt' : IDL.Nat64,
+    'productId' : IDL.Nat,
+    'productName' : IDL.Text,
+    'comment' : IDL.Text,
+    'rating' : IDL.Nat,
+    'customerEmail' : IDL.Text,
+  });
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
   });
   const ContactSubmission = IDL.Record({
     'id' : IDL.Nat,
@@ -164,6 +270,7 @@ export const idlFactory = ({ IDL }) => {
     'deliveredCount' : IDL.Nat,
     'totalRevenue' : IDL.Float64,
     'processingCount' : IDL.Nat,
+    'outForDeliveryCount' : IDL.Nat,
   });
   const Product = IDL.Record({
     'id' : IDL.Nat,
@@ -174,6 +281,13 @@ export const idlFactory = ({ IDL }) => {
     'stock' : IDL.Nat,
     'price' : IDL.Float64,
   });
+  const StoreSettings = IDL.Record({
+    'lowStockThreshold' : IDL.Nat,
+    'deliveryZones' : IDL.Text,
+    'businessAddress' : IDL.Text,
+    'whatsappNumber' : IDL.Text,
+    'isStoreOpen' : IDL.Bool,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -183,18 +297,32 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'createBanner' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
     'deactivateProduct' : IDL.Func(
         [IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'deleteBanner' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'exportOrdersCSV' : IDL.Func([], [IDL.Text], ['query']),
+    'getActiveBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
+    'getAllBanners' : IDL.Func([], [IDL.Vec(Banner)], ['query']),
     'getAllCustomerProfiles' : IDL.Func(
         [],
         [IDL.Vec(CustomerProfile)],
         ['query'],
       ),
     'getAllOrders' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Vec(Order)], ['query']),
+    'getAllReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getContactSubmissions' : IDL.Func(
         [],
@@ -204,10 +332,26 @@ export const idlFactory = ({ IDL }) => {
     'getMyProfile' : IDL.Func([], [IDL.Opt(CustomerProfile)], ['query']),
     'getOrderStats' : IDL.Func([], [Stats], ['query']),
     'getProductById' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
+    'getProductReviews' : IDL.Func([IDL.Nat], [IDL.Vec(Review)], ['query']),
     'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'getStoreSettings' : IDL.Func([], [StoreSettings], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'placeOrder' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
@@ -216,9 +360,20 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'submitContactForm' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'submitReview' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'updateBanner' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'updateOrderStatus' : IDL.Func(
@@ -228,6 +383,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateProduct' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Nat, IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'updateStoreSettings' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),

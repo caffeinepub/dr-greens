@@ -10,6 +10,14 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Banner {
+  'id' : bigint,
+  'title' : string,
+  'badgeText' : string,
+  'createdAt' : bigint,
+  'description' : string,
+  'isActive' : boolean,
+}
 export interface ContactSubmission {
   'id' : bigint,
   'name' : string,
@@ -32,10 +40,13 @@ export interface Order {
   'customerName' : string,
   'status' : string,
   'createdAt' : bigint,
+  'deliveryDate' : string,
   'productId' : bigint,
   'productName' : string,
+  'deliverySlot' : string,
   'email' : string,
   'notes' : string,
+  'discount' : number,
   'quantity' : bigint,
   'phone' : string,
   'totalPrice' : number,
@@ -49,6 +60,16 @@ export interface Product {
   'stock' : bigint,
   'price' : number,
 }
+export interface Review {
+  'id' : bigint,
+  'customerName' : string,
+  'createdAt' : bigint,
+  'productId' : bigint,
+  'productName' : string,
+  'comment' : string,
+  'rating' : bigint,
+  'customerEmail' : string,
+}
 export interface Stats {
   'pendingCount' : bigint,
   'cancelledCount' : bigint,
@@ -56,6 +77,19 @@ export interface Stats {
   'deliveredCount' : bigint,
   'totalRevenue' : number,
   'processingCount' : bigint,
+  'outForDeliveryCount' : bigint,
+}
+export interface StoreSettings {
+  'lowStockThreshold' : bigint,
+  'deliveryZones' : string,
+  'businessAddress' : string,
+  'whatsappNumber' : string,
+  'isStoreOpen' : boolean,
+}
+export interface UserProfile {
+  'name' : string,
+  'email' : string,
+  'phone' : string,
 }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -64,23 +98,36 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addProduct' : ActorMethod<[string, string, number, string, bigint], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createBanner' : ActorMethod<
+    [string, string, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'deactivateProduct' : ActorMethod<
     [bigint],
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'deleteBanner' : ActorMethod<[bigint], { 'ok' : null } | { 'err' : string }>,
   'exportOrdersCSV' : ActorMethod<[], string>,
+  'getActiveBanners' : ActorMethod<[], Array<Banner>>,
+  'getAllBanners' : ActorMethod<[], Array<Banner>>,
   'getAllCustomerProfiles' : ActorMethod<[], Array<CustomerProfile>>,
   'getAllOrders' : ActorMethod<[[] | [string]], Array<Order>>,
+  'getAllReviews' : ActorMethod<[], Array<Review>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getContactSubmissions' : ActorMethod<[], Array<ContactSubmission>>,
   'getMyProfile' : ActorMethod<[], [] | [CustomerProfile]>,
   'getOrderStats' : ActorMethod<[], Stats>,
   'getProductById' : ActorMethod<[bigint], [] | [Product]>,
+  'getProductReviews' : ActorMethod<[bigint], Array<Review>>,
   'getProducts' : ActorMethod<[], Array<Product>>,
+  'getStoreSettings' : ActorMethod<[], StoreSettings>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'placeOrder' : ActorMethod<
-    [bigint, string, string, string, bigint, string],
+    [bigint, string, string, string, bigint, string, string, string],
     { 'ok' : bigint } |
       { 'err' : string }
   >,
@@ -89,9 +136,20 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'submitContactForm' : ActorMethod<
     [string, string, string, string],
     { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'submitReview' : ActorMethod<
+    [bigint, string, string, string, bigint, string],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'updateBanner' : ActorMethod<
+    [bigint, string, string, string, boolean],
+    { 'ok' : null } |
       { 'err' : string }
   >,
   'updateOrderStatus' : ActorMethod<
@@ -101,6 +159,11 @@ export interface _SERVICE {
   >,
   'updateProduct' : ActorMethod<
     [bigint, string, string, number, string, bigint, boolean],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'updateStoreSettings' : ActorMethod<
+    [string, string, string, boolean, bigint],
     { 'ok' : null } |
       { 'err' : string }
   >,

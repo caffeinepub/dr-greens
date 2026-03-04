@@ -5,19 +5,28 @@ import type {
 } from "@/hooks/useQueries";
 import type { ContactSubmission, Order, OrderStatus, Product } from "@/types";
 
+import broccoliMicrogreensImg from "/assets/generated/broccoli-microgreens.dim_600x400.jpg";
+import mixedMicrogreensImg from "/assets/generated/mixed-microgreens.dim_600x400.jpg";
+import peaShootsImg from "/assets/generated/pea-shoots.dim_600x400.jpg";
+import radishMicrogreensImg from "/assets/generated/radish-microgreens.dim_600x400.jpg";
+// ─── Product image imports ────────────────────────────────────────────────
+// ES module imports ensure images are bundled and not pruned during build.
+import sunflowerShootsImg from "/assets/generated/sunflower-shoots.dim_600x400.jpg";
+import wheatgrassImg from "/assets/generated/wheatgrass.dim_600x400.jpg";
+
+export const FALLBACK_IMAGE: string = mixedMicrogreensImg;
+
 // ─── Product image mapping ────────────────────────────────────────────────
-// Maps product IDs (1-based) to local asset paths.
+// Maps product IDs (1-based) to bundled asset URLs.
 // New products added via admin will fall back to a generic image.
 const PRODUCT_IMAGES: Record<number, string> = {
-  1: "/assets/generated/sunflower-shoots.dim_600x400.jpg",
-  2: "/assets/generated/pea-shoots.dim_600x400.jpg",
-  3: "/assets/generated/radish-microgreens.dim_600x400.jpg",
-  4: "/assets/generated/broccoli-microgreens.dim_600x400.jpg",
-  5: "/assets/generated/wheatgrass.dim_600x400.jpg",
-  6: "/assets/generated/mixed-microgreens.dim_600x400.jpg",
+  1: sunflowerShootsImg,
+  2: peaShootsImg,
+  3: radishMicrogreensImg,
+  4: broccoliMicrogreensImg,
+  5: wheatgrassImg,
+  6: mixedMicrogreensImg,
 };
-
-const FALLBACK_IMAGE = "/assets/generated/mixed-microgreens.dim_600x400.jpg";
 
 export function mapProduct(bp: BackendProduct): Product {
   const numericId = Number(bp.id);

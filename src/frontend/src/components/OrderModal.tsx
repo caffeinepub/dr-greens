@@ -7,15 +7,25 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { PlaceOrderParams } from "@/hooks/useQueries";
 import type { CustomerProfile, Product } from "@/types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import {
   AlertCircle,
+  Calendar,
   CheckCircle2,
+  Clock,
   Leaf,
   ShoppingBasket,
+  Tag,
   Wallet,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -36,6 +46,8 @@ interface FormState {
   phone: string;
   quantity: number;
   notes: string;
+  deliveryDate: string;
+  deliverySlot: string;
 }
 
 interface FormErrors {
@@ -43,6 +55,38 @@ interface FormErrors {
   email?: string;
   phone?: string;
   quantity?: string;
+  deliveryDate?: string;
+  deliverySlot?: string;
+}
+
+const DELIVERY_SLOTS = [
+  { value: "Morning (7–11am)", label: "Morning", sub: "7:00am – 11:00am" },
+  { value: "Afternoon (12–4pm)", label: "Afternoon", sub: "12:00pm – 4:00pm" },
+  { value: "Evening (5–8pm)", label: "Evening", sub: "5:00pm – 8:00pm" },
+];
+
+function getDeliveryDateOptions(): { value: string; label: string }[] {
+  const options: { value: string; label: string }[] = [];
+  const today = new Date();
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const iso = d.toISOString().split("T")[0];
+    const label = d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      weekday: "short",
+    });
+    options.push({ value: iso, label });
+  }
+  return options;
+}
+
+function getBulkDiscount(qty: number): { percent: number; label: string } {
+  if (qty >= 5) return { percent: 15, label: "15% Bulk Discount Applied" };
+  if (qty >= 3) return { percent: 10, label: "10% Bulk Discount Applied" };
+  return { percent: 0, label: "" };
 }
 
 const defaultForm: FormState = {
@@ -51,6 +95,8 @@ const defaultForm: FormState = {
   phone: "",
   quantity: 1,
   notes: "",
+  deliveryDate: "",
+  deliverySlot: "",
 };
 
 function validateForm(form: FormState, maxQty: number): FormErrors {
@@ -65,6 +111,9 @@ function validateForm(form: FormState, maxQty: number): FormErrors {
   if (form.quantity < 1) errors.quantity = "Minimum 1 tray.";
   if (form.quantity > maxQty)
     errors.quantity = `Only ${maxQty} trays in stock.`;
+  if (!form.deliveryDate)
+    errors.deliveryDate = "Please select a delivery date.";
+  if (!form.deliverySlot) errors.deliverySlot = "Please select a time slot.";
   return errors;
 }
 
@@ -77,7 +126,11 @@ interface ConfirmedOrderInfo {
   productName: string;
   quantity: number;
   total: number;
+  discountedTotal: number;
+  discountPercent: number;
   customerName: string;
+  deliveryDate: string;
+  deliverySlot: string;
 }
 
 type Step = "form" | "otp" | "success";
@@ -115,6 +168,8 @@ export function OrderModal({
   const [confirmedOrder, setConfirmedOrder] =
     useState<ConfirmedOrderInfo | null>(null);
 
+  const deliveryDateOptions = getDeliveryDateOptions();
+
   // Pre-fill form from customer profile whenever modal opens
   useEffect(() => {
     if (open && customerProfile) {
@@ -128,6 +183,9 @@ export function OrderModal({
   }, [open, customerProfile]);
 
   const isSubmitting = placeOrderMutation.isPending;
+  const bulkDiscount = getBulkDiscount(form.quantity);
+  const rawTotal = product ? product.price * form.quantity : 0;
+  const discountedTotal = rawTotal * (1 - bulkDiscount.percent / 100);
 
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
@@ -171,6 +229,8 @@ export function OrderModal({
         phone: form.phone.trim(),
         quantity: BigInt(form.quantity),
         notes: form.notes.trim(),
+        deliveryDate: form.deliveryDate,
+        deliverySlot: form.deliverySlot,
       });
 
       const otp = generateOTP();
@@ -179,8 +239,12 @@ export function OrderModal({
         orderNumber: orderId.toString(),
         productName: product.name,
         quantity: form.quantity,
-        total: product.price * form.quantity,
+        total: rawTotal,
+        discountedTotal,
+        discountPercent: bulkDiscount.percent,
         customerName: form.name.trim(),
+        deliveryDate: form.deliveryDate,
+        deliverySlot: form.deliverySlot,
       });
       setStep("otp");
       toast.success("Order placed! Please confirm with your OTP code.");
@@ -203,16 +267,14 @@ export function OrderModal({
 
   if (!product) return null;
 
-  const total = product.price * form.quantity;
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         data-ocid="order_modal.dialog"
-        className="sm:max-w-[520px] p-0 overflow-hidden rounded-2xl border-border"
+        className="sm:max-w-[540px] p-0 overflow-hidden rounded-2xl border-border max-h-[90vh] overflow-y-auto"
       >
         {/* Header strip */}
-        <div className="bg-primary px-6 pt-6 pb-5">
+        <div className="bg-primary px-6 pt-6 pb-5 sticky top-0 z-10">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-1">
               <Leaf className="w-4 h-4 text-primary-foreground/80" />
@@ -285,10 +347,28 @@ export function OrderModal({
                       {confirmedOrder.quantity > 1 ? "s" : ""}
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Delivery</span>
+                    <span className="font-medium text-foreground text-right">
+                      {confirmedOrder.deliveryDate} ·{" "}
+                      {confirmedOrder.deliverySlot}
+                    </span>
+                  </div>
+                  {confirmedOrder.discountPercent > 0 && (
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Discount ({confirmedOrder.discountPercent}%)</span>
+                      <span className="font-medium">
+                        -₹
+                        {(
+                          confirmedOrder.total - confirmedOrder.discountedTotal
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between border-t border-border pt-2.5">
                     <span className="text-foreground font-semibold">Total</span>
                     <span className="font-bold text-primary text-base">
-                      ₹{confirmedOrder.total}
+                      ₹{confirmedOrder.discountedTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -486,6 +566,81 @@ export function OrderModal({
                       {errors.quantity}
                     </p>
                   )}
+                  {/* Bulk discount hint */}
+                  {form.quantity < 3 && (
+                    <p className="text-xs text-muted-foreground">
+                      Order 3+ trays for 10% off, 5+ trays for 15% off!
+                    </p>
+                  )}
+                </div>
+
+                {/* Delivery Date */}
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="order-date"
+                    className="text-sm font-semibold flex items-center gap-1.5"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    Delivery Date <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={form.deliveryDate}
+                    onValueChange={(val) => handleChange("deliveryDate", val)}
+                  >
+                    <SelectTrigger
+                      id="order-date"
+                      data-ocid="order_modal.delivery_date.select"
+                      className={`rounded-xl ${errors.deliveryDate ? "border-destructive" : ""}`}
+                    >
+                      <SelectValue placeholder="Choose a date…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deliveryDateOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.deliveryDate && (
+                    <p className="text-destructive text-xs">
+                      {errors.deliveryDate}
+                    </p>
+                  )}
+                </div>
+
+                {/* Time Slot */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    Time Slot <span className="text-destructive">*</span>
+                  </Label>
+                  <div
+                    data-ocid="order_modal.delivery_slot.toggle"
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {DELIVERY_SLOTS.map((slot) => (
+                      <button
+                        key={slot.value}
+                        type="button"
+                        onClick={() => handleChange("deliverySlot", slot.value)}
+                        className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all text-xs font-semibold
+                          ${
+                            form.deliverySlot === slot.value
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                          }`}
+                      >
+                        <span className="font-bold text-sm">{slot.label}</span>
+                        <span className="opacity-75 mt-0.5">{slot.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {errors.deliverySlot && (
+                    <p className="text-destructive text-xs">
+                      {errors.deliverySlot}
+                    </p>
+                  )}
                 </div>
 
                 {/* Notes */}
@@ -510,14 +665,41 @@ export function OrderModal({
                   />
                 </div>
 
-                {/* Total */}
-                <div className="bg-secondary rounded-xl px-4 py-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">
-                    Order Total
-                  </span>
-                  <span className="text-xl font-display font-bold text-primary">
-                    ₹{total}
-                  </span>
+                {/* Total + Discount */}
+                <div className="bg-secondary rounded-xl px-4 py-3 space-y-1.5">
+                  {bulkDiscount.percent > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span className="line-through text-muted-foreground">
+                          ₹{rawTotal.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-emerald-600 text-sm">
+                        <Tag className="w-3.5 h-3.5" />
+                        <span className="font-semibold">
+                          {bulkDiscount.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-border pt-1.5">
+                        <span className="text-sm font-semibold text-foreground">
+                          Order Total
+                        </span>
+                        <span className="text-xl font-display font-bold text-primary">
+                          ₹{discountedTotal.toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-foreground">
+                        Order Total
+                      </span>
+                      <span className="text-xl font-display font-bold text-primary">
+                        ₹{rawTotal.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Cash on Delivery badge */}

@@ -4,7 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { useSubmitContactForm } from "@/hooks/useQueries";
+import {
+  type BackendBanner,
+  useGetActiveBanners,
+  useGetStoreSettings,
+  useSubmitContactForm,
+} from "@/hooks/useQueries";
 import { MyOrders } from "@/pages/MyOrders";
 import type { Product } from "@/types";
 import {
@@ -18,13 +23,16 @@ import {
   LogOut,
   Mail,
   MapPin,
+  MessageCircle,
   Phone,
   Sprout,
   Star,
+  Store,
   User,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface StorefrontProps {
@@ -38,6 +46,7 @@ interface StorefrontProps {
   customerEmail?: string;
   activeTab: "shop" | "my-orders";
   onTabChange: (tab: "shop" | "my-orders") => void;
+  onOrderAgain?: (productId: number, productName: string) => void;
 }
 
 const FEATURES = [
@@ -313,7 +322,7 @@ function ContactSection() {
                       onChange={(e) =>
                         setForm((p) => ({ ...p, phone: e.target.value }))
                       }
-                      placeholder="+27 82 000 0000"
+                      placeholder="+91 98765 43210"
                       className="pl-9 rounded-xl"
                     />
                   </div>
@@ -367,6 +376,132 @@ function ContactSection() {
   );
 }
 
+// ── Promo Banner Strip ─────────────────────────────────────────────────────
+
+function PromoBannerStrip({ banners }: { banners: BackendBanner[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    try {
+      const stored = sessionStorage.getItem("dismissedBanners");
+      return new Set(stored ? JSON.parse(stored) : []);
+    } catch {
+      return new Set();
+    }
+  });
+
+  const visibleBanners = banners.filter((b) => !dismissed.has(b.id.toString()));
+
+  useEffect(() => {
+    if (currentIndex >= visibleBanners.length && visibleBanners.length > 0) {
+      setCurrentIndex(visibleBanners.length - 1);
+    }
+  }, [visibleBanners.length, currentIndex]);
+
+  if (visibleBanners.length === 0) return null;
+
+  const banner =
+    visibleBanners[Math.min(currentIndex, visibleBanners.length - 1)];
+  if (!banner) return null;
+
+  function dismiss() {
+    const newDismissed = new Set(dismissed);
+    newDismissed.add(banner.id.toString());
+    setDismissed(newDismissed);
+    try {
+      sessionStorage.setItem(
+        "dismissedBanners",
+        JSON.stringify([...newDismissed]),
+      );
+    } catch {
+      // ignore
+    }
+    if (currentIndex >= visibleBanners.length - 1) {
+      setCurrentIndex(Math.max(0, currentIndex - 1));
+    }
+  }
+
+  return (
+    <div
+      data-ocid="storefront.promo_banner.panel"
+      className="bg-amber-500 text-white"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          {banner.badgeText && (
+            <span className="bg-white/20 border border-white/30 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+              {banner.badgeText}
+            </span>
+          )}
+          <div className="min-w-0">
+            <span className="font-bold text-sm">{banner.title}</span>
+            {banner.description && (
+              <span className="text-white/90 text-sm ml-2">
+                {banner.description}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {visibleBanners.length > 1 && (
+            <span className="text-xs text-white/70">
+              {currentIndex + 1}/{visibleBanners.length}
+            </span>
+          )}
+          <button
+            type="button"
+            data-ocid="storefront.promo_banner.close_button"
+            onClick={dismiss}
+            className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+            aria-label="Dismiss banner"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── WhatsApp Floating Button ───────────────────────────────────────────────
+
+function WhatsAppButton({ whatsappNumber }: { whatsappNumber: string }) {
+  if (!whatsappNumber) return null;
+  const url = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=Hi%20Dr.%20Greens!%20I%20want%20to%20order%20microgreens.`;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-ocid="storefront.whatsapp.button"
+      title="Chat on WhatsApp"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+      style={{ backgroundColor: "#25D366" }}
+      aria-label="Chat on WhatsApp"
+    >
+      <MessageCircle className="w-7 h-7 text-white fill-white" />
+    </a>
+  );
+}
+
+// ─── Store Closed Banner ───────────────────────────────────────────────────
+
+function StoreClosedBanner() {
+  return (
+    <div
+      data-ocid="storefront.store_closed.panel"
+      className="bg-red-600 text-white"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center gap-3">
+        <Store className="w-4 h-4 flex-shrink-0" />
+        <p className="text-sm font-semibold text-center">
+          Store is currently closed. We'll be back soon!
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function Storefront({
   products,
   isLoading,
@@ -378,13 +513,24 @@ export function Storefront({
   customerEmail = "",
   activeTab,
   onTabChange,
+  onOrderAgain,
 }: StorefrontProps) {
+  const { data: activeBanners = [] } = useGetActiveBanners();
+  const { data: storeSettings } = useGetStoreSettings();
+
+  const isStoreOpen = storeSettings?.isStoreOpen !== false;
+  const whatsappNumber = storeSettings?.whatsappNumber ?? "";
+
   function handleOrderClick(product: Product) {
+    if (!isStoreOpen) return;
     onOrder(product);
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* ── Promo Banners ───────────────────────────────────────── */}
+      {activeBanners.length > 0 && <PromoBannerStrip banners={activeBanners} />}
+
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -427,6 +573,7 @@ export function Storefront({
             </button>
             <button
               type="button"
+              data-ocid="nav.about_link"
               onClick={() => {
                 onTabChange("shop");
                 setTimeout(() => {
@@ -441,6 +588,7 @@ export function Storefront({
             </button>
             <button
               type="button"
+              data-ocid="nav.contact_link"
               onClick={() => {
                 onTabChange("shop");
                 setTimeout(() => {
@@ -511,12 +659,17 @@ export function Storefront({
         </div>
       </header>
 
+      {/* ── Store Closed Banner ──────────────────────────────────── */}
+      {!isStoreOpen && <StoreClosedBanner />}
+
       <main className="flex-1">
         {/* ── My Orders view ────────────────────────────────────── */}
         {activeTab === "my-orders" && (
           <MyOrders
             customerEmail={customerEmail}
             onShopClick={() => onTabChange("shop")}
+            onOrderAgain={onOrderAgain}
+            products={products}
           />
         )}
 
@@ -697,6 +850,8 @@ export function Storefront({
                         product={product}
                         index={i + 1}
                         onOrder={handleOrderClick}
+                        customerEmail={customerEmail}
+                        customerName={customerName}
                       />
                     ))}
               </div>
@@ -807,6 +962,9 @@ export function Storefront({
           </p>
         </div>
       </footer>
+
+      {/* ── WhatsApp Floating Button ─────────────────────────────── */}
+      <WhatsAppButton whatsappNumber={whatsappNumber} />
     </div>
   );
 }

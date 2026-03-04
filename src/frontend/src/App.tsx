@@ -97,6 +97,21 @@ function CustomerApp() {
     setActiveTab("shop");
   }
 
+  // Order Again handler: look up product by id and open modal
+  const handleOrderAgain = useCallback(
+    (productId: number, _productName: string) => {
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        setActiveTab("shop");
+        // Give time to switch tab before opening modal
+        setTimeout(() => {
+          handleOpenOrderModal(product);
+        }, 100);
+      }
+    },
+    [products, handleOpenOrderModal],
+  );
+
   return (
     <>
       <Storefront
@@ -110,6 +125,7 @@ function CustomerApp() {
         customerEmail={user?.email ?? ""}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        onOrderAgain={handleOrderAgain}
       />
 
       <OrderModal

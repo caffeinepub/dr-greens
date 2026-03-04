@@ -1,25 +1,39 @@
 import { Toaster } from "@/components/ui/sonner";
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/useAdminAuth";
+import { AdminBanners } from "@/pages/admin/AdminBanners";
 import { AdminContacts } from "@/pages/admin/AdminContacts";
 import { AdminCustomers } from "@/pages/admin/AdminCustomers";
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { AdminLogin } from "@/pages/admin/AdminLogin";
 import { AdminOrders } from "@/pages/admin/AdminOrders";
 import { AdminProducts } from "@/pages/admin/AdminProducts";
+import { AdminReviews } from "@/pages/admin/AdminReviews";
+import { AdminSettings } from "@/pages/admin/AdminSettings";
 import {
   ClipboardList,
   ExternalLink,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
   MessageSquare,
   Package,
+  Settings,
+  Star,
   Users,
   X,
 } from "lucide-react";
 import { useState } from "react";
 
-type AdminTab = "dashboard" | "orders" | "products" | "customers" | "contacts";
+type AdminTab =
+  | "dashboard"
+  | "orders"
+  | "products"
+  | "customers"
+  | "contacts"
+  | "banners"
+  | "reviews"
+  | "settings";
 
 const NAV_ITEMS: {
   id: AdminTab;
@@ -31,6 +45,9 @@ const NAV_ITEMS: {
   { id: "products", label: "Products", icon: Package },
   { id: "customers", label: "Customers", icon: Users },
   { id: "contacts", label: "Contact Messages", icon: MessageSquare },
+  { id: "banners", label: "Banners", icon: Megaphone },
+  { id: "reviews", label: "Reviews", icon: Star },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminApp() {
@@ -206,6 +223,9 @@ function AdminAppInner() {
           {activeTab === "products" && <AdminProducts />}
           {activeTab === "customers" && <AdminCustomers />}
           {activeTab === "contacts" && <AdminContacts />}
+          {activeTab === "banners" && <AdminBanners />}
+          {activeTab === "reviews" && <AdminReviews />}
+          {activeTab === "settings" && <AdminSettings />}
         </main>
 
         {/* Footer */}

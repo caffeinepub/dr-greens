@@ -1,15 +1,22 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetAllOrders, useGetOrderStats } from "@/hooks/useQueries";
+import {
+  useGetAllOrders,
+  useGetOrderStats,
+  useGetProducts,
+  useGetStoreSettings,
+} from "@/hooks/useQueries";
 import {
   AlertTriangle,
   BadgeCheck,
   Banknote,
+  CheckCircle2,
   ClipboardList,
   Clock,
   Package,
   TrendingUp,
+  Truck,
   XCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -67,6 +74,16 @@ function StatusBadge({ status }: { status: string }) {
 export function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useGetOrderStats();
   const { data: orders = [], isLoading: ordersLoading } = useGetAllOrders();
+  const { data: products = [], isLoading: productsLoading } = useGetProducts();
+  const { data: storeSettings } = useGetStoreSettings();
+
+  const lowStockThreshold = storeSettings
+    ? Number(storeSettings.lowStockThreshold)
+    : 5;
+
+  const lowStockProducts = products.filter(
+    (p) => p.isActive && Number(p.stock) <= lowStockThreshold,
+  );
 
   const recentOrders = [...orders]
     .sort((a, b) => Number(b.createdAt - a.createdAt))
@@ -103,6 +120,14 @@ export function AdminDashboard() {
       icon: Package,
       colorClass: "bg-sky-50 text-sky-600",
       cardClass: "border-l-4 border-l-sky-400",
+      formatter: (v: number) => v.toString(),
+    },
+    {
+      label: "Out for Delivery",
+      value: stats ? Number(stats.outForDeliveryCount ?? 0) : 0,
+      icon: Truck,
+      colorClass: "bg-purple-50 text-purple-600",
+      cardClass: "border-l-4 border-l-purple-400",
       formatter: (v: number) => v.toString(),
     },
     {
@@ -146,7 +171,7 @@ export function AdminDashboard() {
       {/* Stat Cards */}
       <div
         data-ocid="dashboard.stats.panel"
-        className="grid grid-cols-2 lg:grid-cols-3 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {statCards.map((card, i) => (
           <motion.div
@@ -221,34 +246,57 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Order Status Breakdown */}
+        {/* Low Stock Alerts */}
         <Card className="shadow-xs">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
               <p className="text-sm font-semibold text-foreground">
-                Needs Attention
+                Stock Alerts
               </p>
+              {lowStockProducts.length > 0 && (
+                <Badge className="bg-red-100 text-red-700 border-red-200 text-xs ml-auto">
+                  {lowStockProducts.length} low
+                </Badge>
+              )}
             </div>
-            {statsLoading ? (
+            {productsLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-5 w-full" />
                 <Skeleton className="h-5 w-3/4" />
               </div>
+            ) : lowStockProducts.length === 0 ? (
+              <div className="flex items-center gap-2 text-emerald-600">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                <p className="text-sm font-medium">
+                  All products have healthy stock
+                </p>
+              </div>
             ) : (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Awaiting action</span>
-                  <span className="font-semibold text-amber-600">
-                    {Number(stats?.pendingCount ?? 0)} pending
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">In progress</span>
-                  <span className="font-semibold text-blue-600">
-                    {Number(stats?.processingCount ?? 0)} processing
-                  </span>
-                </div>
+                {lowStockProducts.slice(0, 3).map((product) => (
+                  <div
+                    key={product.id.toString()}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-foreground font-medium truncate max-w-[160px]">
+                      {product.name}
+                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-muted-foreground">
+                        {String(product.stock)} left
+                      </span>
+                      <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
+                        Low Stock
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {lowStockProducts.length > 3 && (
+                  <p className="text-xs text-muted-foreground">
+                    +{lowStockProducts.length - 3} more items low on stock
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

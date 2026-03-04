@@ -3,12 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetMyOrders } from "@/hooks/useQueries";
 import type { BackendOrder } from "@/hooks/useQueries";
+import type { Product } from "@/types";
 import {
   ArrowRight,
   CalendarDays,
   ClipboardList,
+  Clock,
   Package,
+  RefreshCw,
   ShoppingBasket,
+  Truck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -58,6 +62,13 @@ function getStatusVariant(status: string): StatusVariant {
       dot: "bg-red-400",
     };
   }
+  if (s === "out-for-delivery") {
+    return {
+      label: "Out for Delivery",
+      className: "bg-purple-50 text-purple-700 border-purple-200",
+      dot: "bg-purple-500",
+    };
+  }
   if (s === "confirmed" || s === "processing" || s === "preparing") {
     return {
       label: status.charAt(0).toUpperCase() + status.slice(1),
@@ -78,9 +89,11 @@ function getStatusVariant(status: string): StatusVariant {
 function OrderCard({
   order,
   index,
+  onOrderAgain,
 }: {
   order: BackendOrder;
   index: number;
+  onOrderAgain?: (productId: number, productName: string) => void;
 }) {
   const variant = getStatusVariant(order.status);
   const orderNum = Number(order.id);
@@ -127,6 +140,11 @@ function OrderCard({
               <span className="font-medium text-foreground">
                 {Number(order.quantity)}
               </span>
+              {order.discount > 0 && (
+                <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+                  {order.discount}% off
+                </Badge>
+              )}
               {order.notes && (
                 <>
                   {" "}
@@ -143,9 +161,41 @@ function OrderCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border/60">
-          <CalendarDays className="w-3.5 h-3.5" />
-          <span>{formatDate(order.createdAt)}</span>
+        {/* Delivery info */}
+        {order.deliveryDate && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Truck className="w-3.5 h-3.5" />
+              <span>{order.deliveryDate}</span>
+            </div>
+            {order.deliverySlot && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{order.deliverySlot}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-1 border-t border-border/60">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="w-3.5 h-3.5" />
+            <span>{formatDate(order.createdAt)}</span>
+          </div>
+          {onOrderAgain && (
+            <Button
+              data-ocid={`my_orders.order_again.button.${index}`}
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                onOrderAgain(Number(order.productId), order.productName)
+              }
+              className="h-7 px-3 text-xs rounded-lg gap-1.5 text-primary border-primary/30 hover:bg-primary/10"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Order Again
+            </Button>
+          )}
         </div>
       </div>
     </motion.article>
@@ -183,9 +233,15 @@ function OrderSkeleton() {
 interface MyOrdersProps {
   customerEmail: string;
   onShopClick: () => void;
+  onOrderAgain?: (productId: number, productName: string) => void;
+  products?: Product[];
 }
 
-export function MyOrders({ customerEmail, onShopClick }: MyOrdersProps) {
+export function MyOrders({
+  customerEmail,
+  onShopClick,
+  onOrderAgain,
+}: MyOrdersProps) {
   const { data: orders = [], isLoading } = useGetMyOrders(customerEmail);
 
   return (
@@ -239,6 +295,7 @@ export function MyOrders({ customerEmail, onShopClick }: MyOrdersProps) {
                   key={order.id.toString()}
                   order={order}
                   index={i + 1}
+                  onOrderAgain={onOrderAgain}
                 />
               ))}
           </AnimatePresence>

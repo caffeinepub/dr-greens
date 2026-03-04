@@ -25,6 +25,9 @@ export interface BackendOrder {
   status: string;
   notes: string;
   createdAt: bigint;
+  deliveryDate: string;
+  deliverySlot: string;
+  discount: number;
 }
 
 export interface BackendStats {
@@ -34,6 +37,35 @@ export interface BackendStats {
   processingCount: bigint;
   deliveredCount: bigint;
   cancelledCount: bigint;
+  outForDeliveryCount: bigint;
+}
+
+export interface BackendReview {
+  id: bigint;
+  productId: bigint;
+  productName: string;
+  customerName: string;
+  customerEmail: string;
+  rating: bigint;
+  comment: string;
+  createdAt: bigint;
+}
+
+export interface BackendBanner {
+  id: bigint;
+  title: string;
+  description: string;
+  badgeText: string;
+  isActive: boolean;
+  createdAt: bigint;
+}
+
+export interface BackendStoreSettings {
+  whatsappNumber: string;
+  businessAddress: string;
+  deliveryZones: string;
+  isStoreOpen: boolean;
+  lowStockThreshold: bigint;
 }
 
 // ─── Products ──────────────────────────────────────────────────────────────
@@ -95,6 +127,7 @@ export function useGetOrderStats() {
           processingCount: BigInt(0),
           deliveredCount: BigInt(0),
           cancelledCount: BigInt(0),
+          outForDeliveryCount: BigInt(0),
         };
       }
       const result = await actor.getOrderStats();
@@ -113,6 +146,8 @@ export interface PlaceOrderParams {
   phone: string;
   quantity: bigint;
   notes: string;
+  deliveryDate: string;
+  deliverySlot: string;
 }
 
 export function usePlaceOrder() {
@@ -128,6 +163,8 @@ export function usePlaceOrder() {
         params.phone,
         params.quantity,
         params.notes,
+        params.deliveryDate,
+        params.deliverySlot,
       );
       if ("err" in result) throw new Error(result.err);
       return result.ok;
@@ -407,6 +444,222 @@ export function useExportOrdersCSV() {
       a.download = `dr-greens-orders-${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
+    },
+  });
+}
+
+// ─── Banners ──────────────────────────────────────────────────────────────
+
+export function useGetActiveBanners() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendBanner[]>({
+    queryKey: ["activeBanners"],
+    queryFn: async () => {
+      if (!actor) return [];
+      const result = await actor.getActiveBanners();
+      return result as BackendBanner[];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllBanners() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendBanner[]>({
+    queryKey: ["allBanners"],
+    queryFn: async () => {
+      if (!actor) return [];
+      const result = await actor.getAllBanners();
+      return result as BackendBanner[];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export interface CreateBannerParams {
+  title: string;
+  description: string;
+  badgeText: string;
+}
+
+export function useCreateBanner() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<bigint, Error, CreateBannerParams>({
+    mutationFn: async (params) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.createBanner(
+        params.title,
+        params.description,
+        params.badgeText,
+      );
+      if ("err" in result) throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allBanners"] });
+      queryClient.invalidateQueries({ queryKey: ["activeBanners"] });
+    },
+  });
+}
+
+export interface UpdateBannerParams {
+  id: bigint;
+  title: string;
+  description: string;
+  badgeText: string;
+  isActive: boolean;
+}
+
+export function useUpdateBanner() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, UpdateBannerParams>({
+    mutationFn: async (params) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.updateBanner(
+        params.id,
+        params.title,
+        params.description,
+        params.badgeText,
+        params.isActive,
+      );
+      if ("err" in result) throw new Error(result.err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allBanners"] });
+      queryClient.invalidateQueries({ queryKey: ["activeBanners"] });
+    },
+  });
+}
+
+export function useDeleteBanner() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, bigint>({
+    mutationFn: async (id) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.deleteBanner(id);
+      if ("err" in result) throw new Error(result.err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allBanners"] });
+      queryClient.invalidateQueries({ queryKey: ["activeBanners"] });
+    },
+  });
+}
+
+// ─── Reviews ──────────────────────────────────────────────────────────────
+
+export function useGetProductReviews(productId: bigint | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendReview[]>({
+    queryKey: ["productReviews", productId?.toString()],
+    queryFn: async () => {
+      if (!actor || !productId) return [];
+      const result = await actor.getProductReviews(productId);
+      return result as BackendReview[];
+    },
+    enabled: !!actor && !isFetching && !!productId,
+  });
+}
+
+export function useGetAllReviews() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendReview[]>({
+    queryKey: ["allReviews"],
+    queryFn: async () => {
+      if (!actor) return [];
+      const result = await actor.getAllReviews();
+      return result as BackendReview[];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export interface SubmitReviewParams {
+  productId: bigint;
+  productName: string;
+  customerEmail: string;
+  customerName: string;
+  rating: bigint;
+  comment: string;
+}
+
+export function useSubmitReview() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<bigint, Error, SubmitReviewParams>({
+    mutationFn: async (params) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.submitReview(
+        params.productId,
+        params.productName,
+        params.customerEmail,
+        params.customerName,
+        params.rating,
+        params.comment,
+      );
+      if ("err" in result) throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["productReviews", variables.productId.toString()],
+      });
+      queryClient.invalidateQueries({ queryKey: ["allReviews"] });
+    },
+  });
+}
+
+// ─── Store Settings ───────────────────────────────────────────────────────
+
+export function useGetStoreSettings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendStoreSettings>({
+    queryKey: ["storeSettings"],
+    queryFn: async () => {
+      if (!actor) {
+        return {
+          whatsappNumber: "",
+          businessAddress: "",
+          deliveryZones: "",
+          isStoreOpen: true,
+          lowStockThreshold: BigInt(5),
+        };
+      }
+      const result = await actor.getStoreSettings();
+      return result as BackendStoreSettings;
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export interface UpdateStoreSettingsParams {
+  whatsappNumber: string;
+  businessAddress: string;
+  deliveryZones: string;
+  isStoreOpen: boolean;
+  lowStockThreshold: bigint;
+}
+
+export function useUpdateStoreSettings() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, UpdateStoreSettingsParams>({
+    mutationFn: async (params) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.updateStoreSettings(
+        params.whatsappNumber,
+        params.businessAddress,
+        params.deliveryZones,
+        params.isStoreOpen,
+        params.lowStockThreshold,
+      );
+      if ("err" in result) throw new Error(result.err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeSettings"] });
     },
   });
 }

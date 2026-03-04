@@ -274,7 +274,14 @@ export function AdminProducts() {
                       />
                     </TableCell>
                     <TableCell className="font-semibold text-sm text-foreground">
-                      {product.name}
+                      <div className="flex items-center gap-2">
+                        {product.name}
+                        {Number(product.stock) <= 5 && product.isActive && (
+                          <Badge className="bg-red-100 text-red-700 border-red-200 text-xs font-semibold">
+                            Low Stock
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground hidden md:table-cell max-w-[200px]">
                       <span className="line-clamp-2">
