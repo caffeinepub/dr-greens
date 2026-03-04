@@ -350,6 +350,46 @@ export function useRegisterProfile() {
   });
 }
 
+// ─── My Orders (customer's own orders) ────────────────────────────────────
+
+export function useGetMyOrders(email: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendOrder[]>({
+    queryKey: ["myOrders", email],
+    queryFn: async () => {
+      if (!actor || !email) return [];
+      const result = await actor.getAllOrders(null);
+      const all = result as BackendOrder[];
+      return all.filter((o) => o.email === email);
+    },
+    enabled: !!actor && !isFetching && !!email,
+  });
+}
+
+// ─── All Customer Profiles (admin) ───────────────────────────────────────
+
+export interface BackendCustomerProfileWithPrincipal {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  googleMapsLink: string;
+  createdAt: bigint;
+}
+
+export function useGetAllCustomerProfiles() {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendCustomerProfileWithPrincipal[]>({
+    queryKey: ["allCustomerProfiles"],
+    queryFn: async () => {
+      if (!actor) return [];
+      const result = await actor.getAllCustomerProfiles();
+      return result as BackendCustomerProfileWithPrincipal[];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 // ─── Export CSV ────────────────────────────────────────────────────────────
 
 export function useExportOrdersCSV() {

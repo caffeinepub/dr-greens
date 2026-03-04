@@ -3,18 +3,35 @@ import { OrderModal } from "@/components/OrderModal";
 import { Toaster } from "@/components/ui/sonner";
 import { useLocalAuth } from "@/hooks/useLocalAuth";
 import { useGetProducts, usePlaceOrder } from "@/hooks/useQueries";
+import { AdminApp } from "@/pages/AdminApp";
 import { Storefront } from "@/pages/Storefront";
 import type { CustomerProfile, OrderModalState, Product } from "@/types";
 import { mapProduct } from "@/utils/mappers";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// ─── App ───────────────────────────────────────────────────────────────────
+type ActiveTab = "shop" | "my-orders";
 
-export default function App() {
+function useHashRoute() {
+  const [hash, setHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    function onHashChange() {
+      setHash(window.location.hash);
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+  return hash;
+}
+
+// ─── Customer App ───────────────────────────────────────────────────────────
+
+function CustomerApp() {
   const [orderModal, setOrderModal] = useState<OrderModalState>({
     open: false,
     product: null,
   });
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>("shop");
 
   const {
     user,
@@ -75,6 +92,11 @@ export default function App() {
     }
   }
 
+  function handleLogout() {
+    logout();
+    setActiveTab("shop");
+  }
+
   return (
     <>
       <Storefront
@@ -83,8 +105,11 @@ export default function App() {
         onOrder={handleOpenOrderModal}
         isLoggedIn={isLoggedIn}
         onLogin={openLoginModal}
-        onLogout={logout}
+        onLogout={handleLogout}
         customerName={user?.name}
+        customerEmail={user?.email ?? ""}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
 
       <OrderModal
@@ -105,4 +130,17 @@ export default function App() {
       <Toaster position="top-right" richColors />
     </>
   );
+}
+
+// ─── App Router ─────────────────────────────────────────────────────────────
+
+export default function App() {
+  const hash = useHashRoute();
+
+  // Render admin app for all /admin routes
+  if (hash.startsWith("#/admin")) {
+    return <AdminApp />;
+  }
+
+  return <CustomerApp />;
 }

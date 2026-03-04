@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubmitContactForm } from "@/hooks/useQueries";
+import { MyOrders } from "@/pages/MyOrders";
 import type { Product } from "@/types";
 import {
   ArrowRight,
   CheckCircle2,
+  ClipboardList,
   Heart,
   Leaf,
   Loader2,
@@ -33,6 +35,9 @@ interface StorefrontProps {
   onLogin: () => void;
   onLogout: () => void;
   customerName?: string;
+  customerEmail?: string;
+  activeTab: "shop" | "my-orders";
+  onTabChange: (tab: "shop" | "my-orders") => void;
 }
 
 const FEATURES = [
@@ -370,6 +375,9 @@ export function Storefront({
   onLogin,
   onLogout,
   customerName,
+  customerEmail = "",
+  activeTab,
+  onTabChange,
 }: StorefrontProps) {
   function handleOrderClick(product: Product) {
     onOrder(product);
@@ -380,8 +388,12 @@ export function Storefront({
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
+          {/* Logo — clicking it returns to shop */}
+          <button
+            type="button"
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={() => onTabChange("shop")}
+          >
             <img
               src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
               alt="Dr. Greens"
@@ -390,29 +402,74 @@ export function Storefront({
             <span className="font-display text-xl font-bold text-primary tracking-tight">
               Dr. Greens
             </span>
-          </div>
+          </button>
 
           {/* Nav */}
           <nav className="flex items-center gap-4 sm:gap-6">
-            <a
+            <button
+              type="button"
               data-ocid="nav.shop_link"
-              href="#shop"
-              className="text-sm font-semibold text-foreground hover:text-primary transition-colors hidden sm:block"
+              onClick={() => {
+                onTabChange("shop");
+                setTimeout(() => {
+                  document
+                    .getElementById("shop")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 50);
+              }}
+              className={`text-sm font-semibold transition-colors hidden sm:block ${
+                activeTab === "shop"
+                  ? "text-primary"
+                  : "text-foreground hover:text-primary"
+              }`}
             >
               Shop
-            </a>
-            <a
-              href="#about"
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onTabChange("shop");
+                setTimeout(() => {
+                  document
+                    .getElementById("about")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 50);
+              }}
               className="text-sm font-semibold text-foreground hover:text-primary transition-colors hidden sm:block"
             >
               About
-            </a>
-            <a
-              href="#contact"
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onTabChange("shop");
+                setTimeout(() => {
+                  document
+                    .getElementById("contact")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 50);
+              }}
               className="text-sm font-semibold text-foreground hover:text-primary transition-colors hidden sm:block"
             >
               Contact
-            </a>
+            </button>
+
+            {/* My Orders tab — only shown when logged in */}
+            {isLoggedIn && (
+              <button
+                type="button"
+                data-ocid="nav.my_orders_tab"
+                onClick={() => onTabChange("my-orders")}
+                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors hidden sm:flex ${
+                  activeTab === "my-orders"
+                    ? "text-primary font-bold"
+                    : "text-foreground hover:text-primary"
+                }`}
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+                My Orders
+              </button>
+            )}
 
             {/* Auth button */}
             {isLoggedIn ? (
@@ -455,250 +512,263 @@ export function Storefront({
       </header>
 
       <main className="flex-1">
-        {/* ── Hero ───────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden">
-          {/* Background image */}
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('/assets/generated/hero-microgreens-bg.dim_1400x700.jpg')",
-            }}
+        {/* ── My Orders view ────────────────────────────────────── */}
+        {activeTab === "my-orders" && (
+          <MyOrders
+            customerEmail={customerEmail}
+            onShopClick={() => onTabChange("shop")}
           />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/30" />
+        )}
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 md:py-36">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-2xl"
-            >
-              <div className="inline-flex items-center gap-2 bg-primary-foreground/15 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-1.5 mb-6">
-                <Leaf className="w-3.5 h-3.5 text-primary-foreground/80" />
-                <span className="text-primary-foreground/90 text-xs font-semibold uppercase tracking-widest">
-                  Fresh · Organic · Delivered
-                </span>
-              </div>
-
-              <h1 className="font-display text-5xl md:text-7xl font-bold text-primary-foreground leading-[1.05] mb-6">
-                Grow Fresh,
-                <br />
-                <em className="italic font-light">Live Well.</em>
-              </h1>
-
-              <p className="text-primary-foreground/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
-                Premium microgreens grown with care right here in India. Packed
-                with nutrients, bursting with flavour — delivered fresh to your
-                door.
-              </p>
-
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  data-ocid="storefront.hero_button"
-                  size="lg"
-                  asChild
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold gap-2 rounded-xl px-8 h-12 text-base shadow-lg hover:scale-105 transition-all"
-                >
-                  <a href="#shop">
-                    Shop Now
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  asChild
-                  className="border-primary-foreground/30 text-primary-foreground bg-transparent hover:bg-primary-foreground/10 font-semibold rounded-xl px-8 h-12 text-base backdrop-blur-sm"
-                >
-                  <a href="#about">Learn More</a>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Decorative wave */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg
-              viewBox="0 0 1440 60"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M0 60V20C240 60 480 0 720 20C960 40 1200 0 1440 20V60H0Z"
-                fill="oklch(0.97 0.015 95)"
+        {/* ── Shop content ──────────────────────────────────────── */}
+        {activeTab === "shop" && (
+          <>
+            {/* ── Hero ───────────────────────────────────────────────── */}
+            <section className="relative overflow-hidden">
+              {/* Background image */}
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{
+                  backgroundImage:
+                    "url('/assets/generated/hero-microgreens-bg.dim_1400x700.jpg')",
+                }}
               />
-            </svg>
-          </div>
-        </section>
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/30" />
 
-        {/* ── Features strip ─────────────────────────────────────── */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {FEATURES.map((feat, i) => (
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 md:py-36">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                  className="max-w-2xl"
+                >
+                  <div className="inline-flex items-center gap-2 bg-primary-foreground/15 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-1.5 mb-6">
+                    <Leaf className="w-3.5 h-3.5 text-primary-foreground/80" />
+                    <span className="text-primary-foreground/90 text-xs font-semibold uppercase tracking-widest">
+                      Fresh · Organic · Delivered
+                    </span>
+                  </div>
+
+                  <h1 className="font-display text-5xl md:text-7xl font-bold text-primary-foreground leading-[1.05] mb-6">
+                    Grow Fresh,
+                    <br />
+                    <em className="italic font-light">Live Well.</em>
+                  </h1>
+
+                  <p className="text-primary-foreground/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
+                    Premium microgreens grown with care right here in India.
+                    Packed with nutrients, bursting with flavour — delivered
+                    fresh to your door.
+                  </p>
+
+                  <div className="flex flex-wrap gap-4">
+                    <Button
+                      data-ocid="storefront.hero_button"
+                      size="lg"
+                      asChild
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold gap-2 rounded-xl px-8 h-12 text-base shadow-lg hover:scale-105 transition-all"
+                    >
+                      <a href="#shop">
+                        Shop Now
+                        <ArrowRight className="w-4 h-4" />
+                      </a>
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      asChild
+                      className="border-primary-foreground/30 text-primary-foreground bg-transparent hover:bg-primary-foreground/10 font-semibold rounded-xl px-8 h-12 text-base backdrop-blur-sm"
+                    >
+                      <a href="#about">Learn More</a>
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Decorative wave */}
+              <div className="absolute bottom-0 left-0 right-0">
+                <svg
+                  viewBox="0 0 1440 60"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M0 60V20C240 60 480 0 720 20C960 40 1200 0 1440 20V60H0Z"
+                    fill="oklch(0.97 0.015 95)"
+                  />
+                </svg>
+              </div>
+            </section>
+
+            {/* ── Features strip ─────────────────────────────────────── */}
+            <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {FEATURES.map((feat, i) => (
+                  <motion.div
+                    key={feat.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.5 }}
+                    className="flex flex-col items-center text-center gap-2 p-4"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+                      <feat.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground text-base">
+                      {feat.title}
+                    </h3>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      {feat.description}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── Product Grid ────────────────────────────────────────── */}
+            <section
+              id="shop"
+              className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+            >
+              {/* Section header */}
               <motion.div
-                key={feat.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="flex flex-col items-center text-center gap-2 p-4"
+                transition={{ duration: 0.5 }}
+                className="mb-12 text-center"
               >
-                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center mb-1">
-                  <feat.icon className="w-5 h-5 text-primary" />
+                <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-widest mb-3">
+                  <span className="h-px w-8 bg-primary/40 inline-block" />
+                  Our Microgreens
+                  <span className="h-px w-8 bg-primary/40 inline-block" />
                 </div>
-                <h3 className="font-display font-semibold text-foreground text-base">
-                  {feat.title}
-                </h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  {feat.description}
+                <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+                  Fresh From the Garden
+                </h2>
+                <p className="text-muted-foreground mt-3 text-base max-w-xl mx-auto">
+                  Each tray is grown to order, ensuring peak nutrition and
+                  flavour when it reaches your kitchen.
                 </p>
+                {!isLoggedIn && (
+                  <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1.5">
+                    <LogIn className="w-3.5 h-3.5" />
+                    <button
+                      type="button"
+                      onClick={onLogin}
+                      className="text-primary hover:underline font-semibold"
+                    >
+                      Sign in
+                    </button>{" "}
+                    to place an order
+                  </p>
+                )}
               </motion.div>
-            ))}
-          </div>
-        </section>
 
-        {/* ── Product Grid ────────────────────────────────────────── */}
-        <section
-          id="shop"
-          className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
-        >
-          {/* Section header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-12 text-center"
-          >
-            <div className="inline-flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-widest mb-3">
-              <span className="h-px w-8 bg-primary/40 inline-block" />
-              Our Microgreens
-              <span className="h-px w-8 bg-primary/40 inline-block" />
-            </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
-              Fresh From the Garden
-            </h2>
-            <p className="text-muted-foreground mt-3 text-base max-w-xl mx-auto">
-              Each tray is grown to order, ensuring peak nutrition and flavour
-              when it reaches your kitchen.
-            </p>
-            {!isLoggedIn && (
-              <p className="text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1.5">
-                <LogIn className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  onClick={onLogin}
-                  className="text-primary hover:underline font-semibold"
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
+                        key={i}
+                        data-ocid="product.loading_state"
+                        className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm"
+                      >
+                        <Skeleton className="aspect-[3/2] w-full" />
+                        <div className="p-5 space-y-3">
+                          <Skeleton className="h-5 w-3/4" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-5/6" />
+                          <div className="flex items-center justify-between pt-3 border-t border-border">
+                            <Skeleton className="h-7 w-16" />
+                            <Skeleton className="h-8 w-24" />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  : products.map((product, i) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        index={i + 1}
+                        onOrder={handleOrderClick}
+                      />
+                    ))}
+              </div>
+            </section>
+
+            {/* ── About section ────────────────────────────────────────── */}
+            <section
+              id="about"
+              className="bg-primary text-primary-foreground py-20 px-4 sm:px-6 lg:px-8"
+            >
+              <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <motion.div
+                  initial={{ opacity: 0, x: -24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
                 >
-                  Sign in
-                </button>{" "}
-                to place an order
-              </p>
-            )}
-          </motion.div>
+                  <div className="inline-flex items-center gap-2 text-primary-foreground/70 text-xs font-semibold uppercase tracking-widest mb-4">
+                    <Leaf className="w-3.5 h-3.5" />
+                    Our Story
+                  </div>
+                  <h2 className="font-display text-4xl md:text-5xl font-bold mb-5 leading-tight">
+                    Grown with Care,
+                    <br />
+                    <em className="italic font-light">Delivered with Love</em>
+                  </h2>
+                  <p className="text-primary-foreground/80 leading-relaxed mb-4">
+                    Dr. Greens started with a simple belief: the freshest, most
+                    nutrient-dense food should be accessible to everyone. We
+                    grow our microgreens in small, carefully tended batches,
+                    never using pesticides or artificial additives.
+                  </p>
+                  <p className="text-primary-foreground/80 leading-relaxed">
+                    From seed to tray in just 7–14 days, our microgreens are
+                    bursting with vitamins, minerals, and enzymes that support a
+                    healthy, vibrant lifestyle.
+                  </p>
+                </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
-                    key={i}
-                    data-ocid="product.loading_state"
-                    className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm"
-                  >
-                    <Skeleton className="aspect-[3/2] w-full" />
-                    <div className="p-5 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6" />
-                      <div className="flex items-center justify-between pt-3 border-t border-border">
-                        <Skeleton className="h-7 w-16" />
-                        <Skeleton className="h-8 w-24" />
+                <motion.div
+                  initial={{ opacity: 0, x: 24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.15 }}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  {[
+                    { value: "7–14", label: "Days from seed to harvest" },
+                    { value: "40×", label: "More nutrients than mature veg" },
+                    { value: "100%", label: "Organically grown" },
+                    { value: "6+", label: "Varieties available" },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="bg-primary-foreground/10 border border-primary-foreground/20 rounded-2xl p-5"
+                    >
+                      <div className="font-display text-3xl font-bold text-primary-foreground mb-1">
+                        {stat.value}
+                      </div>
+                      <div className="text-primary-foreground/70 text-sm leading-tight">
+                        {stat.label}
                       </div>
                     </div>
-                  </div>
-                ))
-              : products.map((product, i) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    index={i + 1}
-                    onOrder={handleOrderClick}
-                  />
-                ))}
-          </div>
-        </section>
-
-        {/* ── About section ────────────────────────────────────────── */}
-        <section
-          id="about"
-          className="bg-primary text-primary-foreground py-20 px-4 sm:px-6 lg:px-8"
-        >
-          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="inline-flex items-center gap-2 text-primary-foreground/70 text-xs font-semibold uppercase tracking-widest mb-4">
-                <Leaf className="w-3.5 h-3.5" />
-                Our Story
+                  ))}
+                </motion.div>
               </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold mb-5 leading-tight">
-                Grown with Care,
-                <br />
-                <em className="italic font-light">Delivered with Love</em>
-              </h2>
-              <p className="text-primary-foreground/80 leading-relaxed mb-4">
-                Dr. Greens started with a simple belief: the freshest, most
-                nutrient-dense food should be accessible to everyone. We grow
-                our microgreens in small, carefully tended batches, never using
-                pesticides or artificial additives.
-              </p>
-              <p className="text-primary-foreground/80 leading-relaxed">
-                From seed to tray in just 7–14 days, our microgreens are
-                bursting with vitamins, minerals, and enzymes that support a
-                healthy, vibrant lifestyle.
-              </p>
-            </motion.div>
+            </section>
 
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              {[
-                { value: "7–14", label: "Days from seed to harvest" },
-                { value: "40×", label: "More nutrients than mature veg" },
-                { value: "100%", label: "Organically grown" },
-                { value: "6+", label: "Varieties available" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="bg-primary-foreground/10 border border-primary-foreground/20 rounded-2xl p-5"
-                >
-                  <div className="font-display text-3xl font-bold text-primary-foreground mb-1">
-                    {stat.value}
-                  </div>
-                  <div className="text-primary-foreground/70 text-sm leading-tight">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ── Contact Us ──────────────────────────────────────────── */}
-        <ContactSection />
+            {/* ── Contact Us ──────────────────────────────────────────── */}
+            <ContactSection />
+          </>
+        )}
       </main>
 
       {/* ── Footer ─────────────────────────────────────────────── */}
