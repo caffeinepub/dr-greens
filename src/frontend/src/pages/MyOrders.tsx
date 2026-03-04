@@ -270,7 +270,7 @@ export function MyOrders({
           </h1>
         </div>
         <p className="text-muted-foreground text-sm mt-2 ml-0.5">
-          Track all your Dr. Greens orders in one place.
+          Track all your Verdant Greens orders in one place.
         </p>
       </motion.div>
 

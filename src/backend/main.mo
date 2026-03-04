@@ -10,9 +10,7 @@ import Iter "mo:core/Iter";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -109,22 +107,6 @@ actor {
   };
 
   // ── State ──────────────────────────────────────────────────────────────────
-  type OldProducts = Map.Map<Nat, Product>;
-  type OldOrders = Map.Map<Nat, Order>;
-  type OldContactSubmissions = Map.Map<Nat, ContactSubmission>;
-  type OldCustomerProfiles = Map.Map<Principal, CustomerProfile>;
-
-  type OldActor = {
-    accessControlState : AccessControl.AccessControlState;
-    products : OldProducts;
-    orders : OldOrders;
-    contactSubmissions : OldContactSubmissions;
-    customerProfiles : OldCustomerProfiles;
-    nextProductId : Nat;
-    nextOrderId : Nat;
-    nextContactId : Nat;
-  };
-
   var nextProductId : Nat = 7;
   var nextOrderId : Nat = 1;
   var nextContactId : Nat = 1;
@@ -265,10 +247,6 @@ actor {
     deliveryDate : Text,
     deliverySlot : Text,
   ) : async { #ok : Nat; #err : Text } {
-    // Check if caller is not anonymous
-    if (caller.isAnonymous()) {
-      return #err("Anonymous users are forbidden from placing orders. Please log in first.");
-    };
     if (quantity == 0) { return #err("Quantity must be at least 1") };
     switch (products.get(productId)) {
       case (null) { #err("Product not found") };
@@ -370,6 +348,12 @@ actor {
         );
       };
     };
+  };
+
+  public query func getMyOrdersByEmail(email : Text) : async [Order] {
+    orders.values().toArray().filter(
+      func(o) { o.email == email }
+    );
   };
 
   public query ({ caller }) func getOrderStats() : async Stats {

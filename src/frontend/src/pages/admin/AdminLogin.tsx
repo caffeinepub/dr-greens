@@ -102,8 +102,8 @@ export function AdminLogin() {
           <div className="flex flex-col items-center text-center mb-8">
             <div className="relative mb-4">
               <img
-                src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
-                alt="Dr. Greens"
+                src="/assets/generated/verdant-greens-logo-transparent.dim_300x300.png"
+                alt="Verdant Greens"
                 className="h-16 w-16 object-contain"
               />
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md">
@@ -111,7 +111,7 @@ export function AdminLogin() {
               </div>
             </div>
             <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">
-              Dr. Greens
+              Verdant Greens
             </h1>
             <AnimatePresence mode="wait">
               {mode === "register" ? (
@@ -127,7 +127,7 @@ export function AdminLogin() {
                     Create Admin Account
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    First-time setup for Dr. Greens admin panel
+                    First-time setup for Verdant Greens admin panel
                   </p>
                 </motion.div>
               ) : (
@@ -194,7 +194,7 @@ export function AdminLogin() {
                       data-ocid="admin.register.email_input"
                       type="email"
                       autoComplete="email"
-                      placeholder="Dr.Greens2026@gmail.com"
+                      placeholder="Verdant Greens2026@gmail.com"
                       value={regEmail}
                       onChange={(e) => {
                         setRegEmail(e.target.value);

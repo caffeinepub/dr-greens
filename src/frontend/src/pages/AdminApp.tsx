@@ -111,13 +111,13 @@ function AdminAppInner() {
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <div className="flex items-center gap-2.5">
             <img
-              src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
-              alt="Dr. Greens"
+              src="/assets/generated/verdant-greens-logo-transparent.dim_300x300.png"
+              alt="Verdant Greens"
               className="h-9 w-9 object-contain"
             />
             <div>
               <p className="font-display text-sm font-bold text-white leading-tight">
-                Dr. Greens
+                Verdant Greens
               </p>
               <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest">
                 Admin Panel
@@ -198,8 +198,8 @@ function AdminAppInner() {
               <Menu className="w-5 h-5" />
             </button>
             <img
-              src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
-              alt="Dr. Greens"
+              src="/assets/generated/verdant-greens-logo-transparent.dim_300x300.png"
+              alt="Verdant Greens"
               className="h-7 w-7 object-contain"
             />
             <span className="font-display text-sm font-bold text-foreground">
@@ -230,7 +230,7 @@ function AdminAppInner() {
 
         {/* Footer */}
         <footer className="py-4 px-7 border-t border-border text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Dr. Greens · Built with ❤️ using{" "}
+          © {new Date().getFullYear()} Verdant Greens · Built with ❤️ using{" "}
           <a
             href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
             target="_blank"

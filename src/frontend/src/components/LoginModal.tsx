@@ -121,7 +121,7 @@ export function LoginModal({
                 <Leaf className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-primary-foreground/80 text-xs font-semibold uppercase tracking-widest">
-                Dr. Greens
+                Verdant Greens
               </span>
             </div>
             <DialogTitle className="font-display text-2xl font-bold text-primary-foreground">

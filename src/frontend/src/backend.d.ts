@@ -126,6 +126,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getMyOrdersByEmail(email: string): Promise<Array<Order>>;
     getMyProfile(): Promise<CustomerProfile | null>;
     getOrderStats(): Promise<Stats>;
     getProductById(id: bigint): Promise<Product | null>;

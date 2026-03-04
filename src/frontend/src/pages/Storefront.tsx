@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useCart } from "@/contexts/CartContext";
 import {
   type BackendBanner,
   useGetActiveBanners,
@@ -25,6 +26,7 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  ShoppingCart,
   Sprout,
   Star,
   Store,
@@ -38,7 +40,7 @@ import { toast } from "sonner";
 interface StorefrontProps {
   products: Product[];
   isLoading?: boolean;
-  onOrder: (product: Product) => void;
+  onOrder?: (product: Product) => void;
   isLoggedIn: boolean;
   onLogin: () => void;
   onLogout: () => void;
@@ -47,6 +49,7 @@ interface StorefrontProps {
   activeTab: "shop" | "my-orders";
   onTabChange: (tab: "shop" | "my-orders") => void;
   onOrderAgain?: (productId: number, productName: string) => void;
+  onOpenCart?: () => void;
 }
 
 const FEATURES = [
@@ -160,8 +163,8 @@ function ContactSection() {
                 {
                   icon: Mail,
                   label: "Email",
-                  value: "Dr.Greens2026@gmail.com",
-                  href: "mailto:Dr.Greens2026@gmail.com",
+                  value: "Verdant Greens2026@gmail.com",
+                  href: "mailto:Verdant Greens2026@gmail.com",
                 },
                 {
                   icon: Phone,
@@ -505,7 +508,6 @@ function StoreClosedBanner() {
 export function Storefront({
   products,
   isLoading,
-  onOrder,
   isLoggedIn,
   onLogin,
   onLogout,
@@ -514,17 +516,14 @@ export function Storefront({
   activeTab,
   onTabChange,
   onOrderAgain,
+  onOpenCart,
 }: StorefrontProps) {
   const { data: activeBanners = [] } = useGetActiveBanners();
   const { data: storeSettings } = useGetStoreSettings();
+  const { totalItems } = useCart();
 
   const isStoreOpen = storeSettings?.isStoreOpen !== false;
   const whatsappNumber = storeSettings?.whatsappNumber ?? "";
-
-  function handleOrderClick(product: Product) {
-    if (!isStoreOpen) return;
-    onOrder(product);
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -541,12 +540,12 @@ export function Storefront({
             onClick={() => onTabChange("shop")}
           >
             <img
-              src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
-              alt="Dr. Greens"
+              src="/assets/generated/verdant-greens-logo-transparent.dim_300x300.png"
+              alt="Verdant Greens"
               className="h-10 w-10 object-contain"
             />
             <span className="font-display text-xl font-bold text-primary tracking-tight">
-              Dr. Greens
+              Verdant Greens
             </span>
           </button>
 
@@ -618,6 +617,22 @@ export function Storefront({
                 My Orders
               </button>
             )}
+
+            {/* Cart button */}
+            <button
+              type="button"
+              data-ocid="nav.cart_button"
+              onClick={onOpenCart}
+              className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-primary/10 transition-colors text-foreground hover:text-primary"
+              aria-label="Open cart"
+            >
+              <ShoppingCart className="w-4.5 h-4.5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-accent text-accent-foreground text-[10px] font-black flex items-center justify-center leading-none min-w-[18px] min-h-[18px] px-0.5">
+                  {totalItems}
+                </span>
+              )}
+            </button>
 
             {/* Auth button */}
             {isLoggedIn ? (
@@ -849,7 +864,6 @@ export function Storefront({
                         key={product.id}
                         product={product}
                         index={i + 1}
-                        onOrder={handleOrderClick}
                         customerEmail={customerEmail}
                         customerName={customerName}
                       />
@@ -879,9 +893,9 @@ export function Storefront({
                     <em className="italic font-light">Delivered with Love</em>
                   </h2>
                   <p className="text-primary-foreground/80 leading-relaxed mb-4">
-                    Dr. Greens started with a simple belief: the freshest, most
-                    nutrient-dense food should be accessible to everyone. We
-                    grow our microgreens in small, carefully tended batches,
+                    Verdant Greens started with a simple belief: the freshest,
+                    most nutrient-dense food should be accessible to everyone.
+                    We grow our microgreens in small, carefully tended batches,
                     never using pesticides or artificial additives.
                   </p>
                   <p className="text-primary-foreground/80 leading-relaxed">
@@ -931,12 +945,12 @@ export function Storefront({
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <img
-              src="/assets/generated/dr-greens-logo-transparent.dim_300x300.png"
-              alt="Dr. Greens"
+              src="/assets/generated/verdant-greens-logo-transparent.dim_300x300.png"
+              alt="Verdant Greens"
               className="h-8 w-8 object-contain opacity-80"
             />
             <span className="font-display text-lg font-semibold text-background">
-              Dr. Greens
+              Verdant Greens
             </span>
           </div>
           <p className="text-sm text-background/60 text-center">

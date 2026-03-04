@@ -209,6 +209,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getMyOrdersByEmail(email: string): Promise<Array<Order>>;
     getMyProfile(): Promise<CustomerProfile | null>;
     getOrderStats(): Promise<Stats>;
     getProductById(id: bigint): Promise<Product | null>;
@@ -503,6 +504,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getContactSubmissions();
+            return result;
+        }
+    }
+    async getMyOrdersByEmail(arg0: string): Promise<Array<Order>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyOrdersByEmail(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyOrdersByEmail(arg0);
             return result;
         }
     }

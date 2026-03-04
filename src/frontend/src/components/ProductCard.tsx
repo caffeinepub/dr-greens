@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useCart } from "@/contexts/CartContext";
 import {
   type BackendReview,
   useGetProductReviews,
@@ -16,7 +17,15 @@ import {
 } from "@/hooks/useQueries";
 import type { Product } from "@/types";
 import { FALLBACK_IMAGE } from "@/utils/mappers";
-import { Leaf, MessageCircle, ShoppingBasket, Star } from "lucide-react";
+import {
+  CheckCircle2,
+  Leaf,
+  MessageCircle,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Star,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,7 +33,7 @@ import { toast } from "sonner";
 interface ProductCardProps {
   product: Product;
   index: number;
-  onOrder: (product: Product) => void;
+  onOrder?: (product: Product) => void;
   customerEmail?: string;
   customerName?: string;
 }
@@ -282,7 +291,6 @@ function ReviewsSheet({
 export function ProductCard({
   product,
   index,
-  onOrder,
   customerEmail,
   customerName,
 }: ProductCardProps) {
@@ -290,12 +298,23 @@ export function ProductCard({
   const isOutOfStock = product.stock === 0;
   const [reviewsOpen, setReviewsOpen] = useState(false);
 
+  const { items, addToCart, updateQuantity, removeFromCart } = useCart();
+  const cartItem = items.find((i) => i.product.id === product.id);
+  const cartQty = cartItem?.quantity ?? 0;
+  const inCart = cartQty > 0;
+
   // Fetch reviews for rating badge (only a small fetch)
   const { data: reviews = [] } = useGetProductReviews(BigInt(product.id));
   const avgRating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + Number(r.rating), 0) / reviews.length
       : 0;
+
+  function handleAddToCart() {
+    if (isOutOfStock) return;
+    addToCart(product, 1);
+    toast.success(`${product.name} added to cart!`);
+  }
 
   return (
     <>
@@ -373,16 +392,16 @@ export function ProductCard({
           )}
 
           {/* Price + CTA */}
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-            <div>
-              <span className="text-xl font-display font-bold text-primary">
-                ₹{product.price}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">
-                {product.unit}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+          <div className="mt-auto pt-3 border-t border-border space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xl font-display font-bold text-primary">
+                  ₹{product.price}
+                </span>
+                <span className="text-xs text-muted-foreground ml-1">
+                  {product.unit}
+                </span>
+              </div>
               <Button
                 data-ocid={`product.reviews.secondary_button.${index}`}
                 size="sm"
@@ -393,17 +412,63 @@ export function ProductCard({
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </Button>
+            </div>
+
+            {/* Cart controls */}
+            {inCart ? (
+              <div
+                data-ocid={`product.cart_controls.${index}`}
+                className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl px-3 py-2"
+              >
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-primary">
+                    In Cart ({cartQty})
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    data-ocid={`product.cart_minus.${index}`}
+                    onClick={() => {
+                      if (cartQty <= 1) {
+                        removeFromCart(product.id);
+                      } else {
+                        updateQuantity(product.id, cartQty - 1);
+                      }
+                    }}
+                    className="w-6 h-6 rounded-full bg-muted hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="text-sm font-bold text-foreground w-5 text-center">
+                    {cartQty}
+                  </span>
+                  <button
+                    type="button"
+                    data-ocid={`product.cart_plus.${index}`}
+                    onClick={() => updateQuantity(product.id, cartQty + 1)}
+                    disabled={cartQty >= product.stock}
+                    className="w-6 h-6 rounded-full bg-muted hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ) : (
               <Button
-                data-ocid={`product.order_button.${index}`}
+                data-ocid={`product.add_to_cart_button.${index}`}
                 size="sm"
                 disabled={isOutOfStock}
-                onClick={() => onOrder(product)}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-1.5 rounded-xl transition-all duration-200 hover:scale-105"
+                onClick={handleAddToCart}
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-1.5 rounded-xl transition-all duration-200 hover:scale-[1.02]"
               >
-                <ShoppingBasket className="w-3.5 h-3.5" />
-                Order Now
+                <ShoppingCart className="w-3.5 h-3.5" />
+                {isOutOfStock ? "Out of Stock" : "Add to Cart"}
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </motion.div>

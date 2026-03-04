@@ -164,7 +164,7 @@ export function AdminDashboard() {
           Dashboard
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Your Dr. Greens business at a glance
+          Your Verdant Greens business at a glance
         </p>
       </div>
 

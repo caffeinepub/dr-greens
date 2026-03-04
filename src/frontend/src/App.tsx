@@ -1,11 +1,12 @@
+import { CartDrawer } from "@/components/CartDrawer";
 import { LoginModal } from "@/components/LoginModal";
-import { OrderModal } from "@/components/OrderModal";
 import { Toaster } from "@/components/ui/sonner";
+import { CartProvider } from "@/contexts/CartContext";
 import { useLocalAuth } from "@/hooks/useLocalAuth";
-import { useGetProducts, usePlaceOrder } from "@/hooks/useQueries";
+import { useGetProducts } from "@/hooks/useQueries";
 import { AdminApp } from "@/pages/AdminApp";
 import { Storefront } from "@/pages/Storefront";
-import type { CustomerProfile, OrderModalState, Product } from "@/types";
+import type { CustomerProfile, Product } from "@/types";
 import { mapProduct } from "@/utils/mappers";
 import { useCallback, useEffect, useState } from "react";
 
@@ -26,12 +27,8 @@ function useHashRoute() {
 // ─── Customer App ───────────────────────────────────────────────────────────
 
 function CustomerApp() {
-  const [orderModal, setOrderModal] = useState<OrderModalState>({
-    open: false,
-    product: null,
-  });
-
   const [activeTab, setActiveTab] = useState<ActiveTab>("shop");
+  const [cartOpen, setCartOpen] = useState(false);
 
   const {
     user,
@@ -47,10 +44,6 @@ function CustomerApp() {
   const { data: backendProducts = [], isLoading: productsLoading } =
     useGetProducts();
 
-  const placeOrderMutation = usePlaceOrder();
-
-  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
-
   // Map backend products to frontend shape
   const products: Product[] = backendProducts.map(mapProduct);
 
@@ -65,31 +58,8 @@ function CustomerApp() {
       }
     : null;
 
-  // Open order modal — requires login
-  const handleOpenOrderModal = useCallback(
-    (product: Product) => {
-      if (!isLoggedIn) {
-        openLoginModal();
-        // Store which product was clicked so we can open order after login
-        setPendingProduct(product);
-        return;
-      }
-      setOrderModal({ open: true, product });
-    },
-    [isLoggedIn, openLoginModal],
-  );
-
-  const handleCloseOrderModal = useCallback(() => {
-    setOrderModal({ open: false, product: null });
-  }, []);
-
   function handleLoginComplete(userData: Parameters<typeof login>[0]) {
     login(userData);
-    // If user was trying to order a product, open the order modal now
-    if (pendingProduct) {
-      setOrderModal({ open: true, product: pendingProduct });
-      setPendingProduct(null);
-    }
   }
 
   function handleLogout() {
@@ -97,27 +67,25 @@ function CustomerApp() {
     setActiveTab("shop");
   }
 
-  // Order Again handler: look up product by id and open modal
+  // Order Again handler: open cart drawer
   const handleOrderAgain = useCallback(
     (productId: number, _productName: string) => {
       const product = products.find((p) => p.id === productId);
       if (product) {
         setActiveTab("shop");
-        // Give time to switch tab before opening modal
         setTimeout(() => {
-          handleOpenOrderModal(product);
+          setCartOpen(true);
         }, 100);
       }
     },
-    [products, handleOpenOrderModal],
+    [products],
   );
 
   return (
-    <>
+    <CartProvider>
       <Storefront
         products={products}
         isLoading={productsLoading}
-        onOrder={handleOpenOrderModal}
         isLoggedIn={isLoggedIn}
         onLogin={openLoginModal}
         onLogout={handleLogout}
@@ -126,13 +94,18 @@ function CustomerApp() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOrderAgain={handleOrderAgain}
+        onOpenCart={() => setCartOpen(true)}
       />
 
-      <OrderModal
-        open={orderModal.open}
-        product={orderModal.product}
-        onClose={handleCloseOrderModal}
-        placeOrderMutation={placeOrderMutation}
+      {/* Cart Drawer */}
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        isLoggedIn={isLoggedIn}
+        onLogin={() => {
+          setCartOpen(false);
+          openLoginModal();
+        }}
         customerProfile={customerProfile}
       />
 
@@ -144,7 +117,7 @@ function CustomerApp() {
       />
 
       <Toaster position="top-right" richColors />
-    </>
+    </CartProvider>
   );
 }
 

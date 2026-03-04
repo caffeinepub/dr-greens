@@ -1,74 +1,31 @@
-# Dr. Greens
+# Verdant Greens
 
 ## Current State
+The app has a customer storefront and an admin panel. Customers can add products to a cart (CartDrawer), then click "Checkout" to open a CartCheckoutModal (dialog) where they fill in their details, choose a delivery date/slot, and place the order. Orders are saved in the backend and visible in the admin panel.
 
-Full-stack microgreens e-commerce app with:
-- Customer storefront: product grid, local-auth login (name/email/phone/location), order modal with OTP confirmation, "My Orders" tab, Contact Us form
-- Admin panel at `/#/admin`: email+password login, dashboard with stats, orders management, products CRUD, customers view, contact messages
-- Backend: products, orders, customerProfiles, contactSubmissions; admin role-gating; export CSV
-- All product images are client-side mapped by product name
-- Currency: ₹ INR; Cash on Delivery only
+The CartDrawer shows cart items, quantity controls, pricing, and a "Checkout" button. The CartCheckoutModal handles the multi-step form: form → OTP → success.
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **Product reviews & ratings** -- Customers can rate a product (1-5 stars) and leave a short text review after ordering. Ratings shown on product cards and a reviews section per product. Admin can see all reviews.
-2. **Promotional banners** -- Admin can create/delete banner announcements (title, description, optional badge text, active flag). Customer storefront shows active banners in a dismissible strip above the hero.
-3. **Inventory low-stock alerts** -- Admin dashboard "Needs Attention" card shows a red warning for any product with stock <= 5, with product name and current stock count.
-4. **Order scheduling** -- Customers can pick a preferred delivery date (today+1 to today+14 days) and time slot (Morning 7–11am, Afternoon 12–4pm, Evening 5–8pm) in the order form. Saved on order. Visible in admin orders table.
-5. **Bulk discount** -- Backend: tiered pricing logic. Orders >= 3 trays: 10% off; >= 5 trays: 15% off. Discount shown in order modal total. Applied before saving totalPrice.
-6. **"Order Again" shortcut** -- In My Orders, each order card shows an "Order Again" button that reopens the order modal pre-filled with the same product.
-7. **About Us / Story page** -- Dedicated `/about` hash route with brand story, team photo placeholder, certifications, farm stats, and CTA. Nav link added.
-8. **WhatsApp floating button** -- Fixed bottom-right floating button on storefront linking to WhatsApp (wa.me/+91XXXXXXXXXX placeholder). Admin can set their WhatsApp number in a settings page.
-9. **SEO metadata** -- index.html updated with proper title, meta description, keywords, og:title, og:description, og:image for Dr. Greens microgreens India. Canonical tag.
-10. **Admin Settings page** -- New "Settings" nav item in admin sidebar. Admin can set WhatsApp number, business address, delivery zone pin codes (comma-separated), store open/closed toggle, and low-stock threshold. Stored in backend.
+- A "Place Order" tab/step directly inside the CartDrawer (as an inline second panel/step), so the checkout flow is contained within the cart side panel rather than opening a separate modal dialog.
+- The "Place Order" step should show: order summary, customer detail fields (pre-filled from profile), delivery date and time slot selectors, notes, Cash on Delivery badge, and a "Place Order" button.
+- After successful order placement, show a confirmation step inside the drawer with order number(s), OTP code, and a "Done" button that clears the cart.
 
 ### Modify
-- `Order` type: add `deliveryDate: Text`, `deliverySlot: Text`, `discount: Float` fields
-- `placeOrder` function: accept deliveryDate, deliverySlot; compute discount based on quantity tiers; apply to totalPrice
-- `getOrderStats` / `exportOrdersCSV`: include delivery slot and discount in CSV
-- Admin Orders table: show delivery date, time slot columns
-- Admin Dashboard: low-stock alert cards showing products at or below threshold
-- ProductCard: show average star rating if reviews exist
-- My Orders: "Order Again" button on each card
+- CartDrawer: add a two-step view — "Cart" view and "Place Order" view — toggled via a tab or a "Proceed to Place Order" button replacing the existing "Checkout" button.
+- The existing CartCheckoutModal component can be kept but is no longer triggered from the cart drawer; instead the inline flow handles it.
+- Ensure orders placed via the drawer are still submitted to the backend via `placeOrder` mutation and appear in the admin panel.
 
 ### Remove
-- Nothing removed
+- The separate CartCheckoutModal dialog flow triggered from the CartDrawer (replace with inline drawer step).
 
 ## Implementation Plan
-
-### Backend
-1. Add `Review` type: id, productId, productName, customerEmail, customerName, rating (Nat 1-5), comment, createdAt
-2. Add `Banner` type: id, title, description, badgeText, isActive, createdAt
-3. Add `StoreSettings` type: whatsappNumber, businessAddress, deliveryZones, isStoreOpen, lowStockThreshold
-4. Add `nextReviewId`, `nextBannerId`, `reviews` map, `banners` map, `storeSettings` mutable var
-5. Extend `Order` with `deliveryDate: Text`, `deliverySlot: Text`, `discount: Float`
-6. Update `placeOrder` to accept deliveryDate, deliverySlot; compute discount (>=3: 10%, >=5: 15%); store discount on order
-7. Add `submitReview(productId, productName, rating, comment)` - caller must not be anonymous
-8. Add `getProductReviews(productId)` - public query
-9. Add `getAllReviews()` - admin only
-10. Add `createBanner(title, description, badgeText)` - admin only, returns id
-11. Add `updateBanner(id, title, description, badgeText, isActive)` - admin only
-12. Add `deleteBanner(id)` - admin only
-13. Add `getActiveBanners()` - public query
-14. Add `getAllBanners()` - admin query
-15. Add `getStoreSettings()` - public query (for WhatsApp number, isStoreOpen)
-16. Add `updateStoreSettings(whatsappNumber, businessAddress, deliveryZones, isStoreOpen, lowStockThreshold)` - admin only
-17. Update `exportOrdersCSV` to include deliveryDate, deliverySlot, discount columns
-
-### Frontend
-1. Update `backend.d.ts` after backend generation
-2. Update `useQueries.ts`: add hooks for reviews (submit, get by product, get all), banners (get active, CRUD admin), store settings (get, update admin), updated placeOrder signature
-3. Update `OrderModal`: add delivery date picker + time slot selector; compute and display discount/total
-4. Update `ProductCard`: show average star rating badge
-5. Add `ReviewsSection` component: shows ratings breakdown and review list per product (expandable under each product card or in a drawer)
-6. Update `Storefront`: add promotional banner strip (dismissible), About nav link, floating WhatsApp button
-7. Add `AboutPage` component for `/#/about` hash route
-8. Update `MyOrders`: add "Order Again" button per card
-9. Update admin `AdminDashboard`: low-stock alert cards from backend stock vs threshold
-10. Update admin `AdminProducts`: show stock warning badge for low-stock items
-11. Add admin `AdminBanners` page: create, toggle, delete banners
-12. Add admin `AdminReviews` page: view all reviews
-13. Add admin `AdminSettings` page: WhatsApp number, address, delivery zones, store open toggle, low-stock threshold
-14. Update `AdminApp`: add Banners, Reviews, Settings nav items
-15. Update `index.html`: add SEO meta tags
+1. Refactor `CartDrawer.tsx` to support two views: `"cart"` (existing) and `"order"` (new Place Order step).
+2. In the `"order"` view, embed the form fields, delivery date/slot, notes, and Cash on Delivery badge inline in the drawer's scroll area.
+3. Wire the `usePlaceOrder` mutation inside CartDrawer for the inline order step.
+4. On success, show a confirmation panel inside the drawer with order numbers and OTP code.
+5. Replace the "Checkout" button with "Proceed to Place Order" (or similar) that switches to the order step.
+6. Add a back button in the order step to return to the cart.
+7. Remove or disconnect the CartCheckoutModal trigger from the CartDrawer (keep the component file in case it's used elsewhere).
+8. Ensure `onCheckout` prop is no longer needed or update callers accordingly.

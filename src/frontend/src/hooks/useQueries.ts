@@ -244,7 +244,7 @@ export function useUpdateProduct() {
   return useMutation<void, Error, UpdateProductParams>({
     mutationFn: async (params) => {
       if (!actor) throw new Error("Not connected to backend");
-      await actor.updateProduct(
+      const result = await actor.updateProduct(
         params.id,
         params.name,
         params.description,
@@ -253,6 +253,7 @@ export function useUpdateProduct() {
         params.stock,
         params.isActive,
       );
+      if ("err" in result) throw new Error(result.err as string);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -395,9 +396,8 @@ export function useGetMyOrders(email: string) {
     queryKey: ["myOrders", email],
     queryFn: async () => {
       if (!actor || !email) return [];
-      const result = await actor.getAllOrders(null);
-      const all = result as BackendOrder[];
-      return all.filter((o) => o.email === email);
+      const result = await actor.getMyOrdersByEmail(email);
+      return result as BackendOrder[];
     },
     enabled: !!actor && !isFetching && !!email,
   });
@@ -441,7 +441,7 @@ export function useExportOrdersCSV() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `dr-greens-orders-${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `verdant-greens-orders-${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     },

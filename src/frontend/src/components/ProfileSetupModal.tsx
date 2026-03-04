@@ -106,7 +106,7 @@ export function ProfileSetupModal({
 
     try {
       await registerMutation.mutateAsync(params);
-      toast.success("Welcome to Dr. Greens! Your profile is all set.");
+      toast.success("Welcome to Verdant Greens! Your profile is all set.");
       onComplete();
     } catch (err) {
       const message =
@@ -138,11 +138,11 @@ export function ProfileSetupModal({
                 <Leaf className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-primary-foreground/80 text-xs font-semibold uppercase tracking-widest">
-                Dr. Greens
+                Verdant Greens
               </span>
             </div>
             <DialogTitle className="font-display text-2xl font-bold text-primary-foreground">
-              Welcome to Dr. Greens! 🌿
+              Welcome to Verdant Greens! 🌿
             </DialogTitle>
             <DialogDescription className="text-primary-foreground/75 text-sm mt-1.5 leading-relaxed">
               Just a few quick details to get you set up for ordering. We'll use

@@ -118,6 +118,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getContactSubmissions' : ActorMethod<[], Array<ContactSubmission>>,
+  'getMyOrdersByEmail' : ActorMethod<[string], Array<Order>>,
   'getMyProfile' : ActorMethod<[], [] | [CustomerProfile]>,
   'getOrderStats' : ActorMethod<[], Stats>,
   'getProductById' : ActorMethod<[bigint], [] | [Product]>,
