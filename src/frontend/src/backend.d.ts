@@ -15,6 +15,15 @@ export interface Stats {
     totalRevenue: number;
     processingCount: bigint;
 }
+export interface CustomerProfile {
+    principal: Principal;
+    name: string;
+    createdAt: bigint;
+    googleMapsLink: string;
+    email: string;
+    phone: string;
+    location: string;
+}
 export interface Order {
     id: bigint;
     customerName: string;
@@ -61,9 +70,11 @@ export interface backendInterface {
         err: string;
     }>;
     exportOrdersCSV(): Promise<string>;
+    getAllCustomerProfiles(): Promise<Array<CustomerProfile>>;
     getAllOrders(statusFilter: string | null): Promise<Array<Order>>;
     getCallerUserRole(): Promise<UserRole>;
     getContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getMyProfile(): Promise<CustomerProfile | null>;
     getOrderStats(): Promise<Stats>;
     getProductById(id: bigint): Promise<Product | null>;
     getProducts(): Promise<Array<Product>>;
@@ -71,6 +82,13 @@ export interface backendInterface {
     placeOrder(productId: bigint, customerName: string, email: string, phone: string, quantity: bigint, notes: string): Promise<{
         __kind__: "ok";
         ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    registerCustomerProfile(name: string, email: string, phone: string, location: string, googleMapsLink: string): Promise<{
+        __kind__: "ok";
+        ok: null;
     } | {
         __kind__: "err";
         err: string;

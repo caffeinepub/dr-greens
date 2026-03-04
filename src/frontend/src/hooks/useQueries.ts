@@ -291,6 +291,65 @@ export function useGetContactSubmissions() {
   });
 }
 
+// ─── Customer Profile ─────────────────────────────────────────────────────
+
+export interface BackendCustomerProfile {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  googleMapsLink: string;
+}
+
+export function useGetMyProfile(enabled: boolean) {
+  const { actor, isFetching } = useActor();
+  return useQuery<BackendCustomerProfile | null>({
+    queryKey: ["myProfile"],
+    queryFn: async () => {
+      if (!actor) return null;
+      const result = await actor.getMyProfile();
+      if (!result) return null;
+      return {
+        name: result.name,
+        email: result.email,
+        phone: result.phone,
+        location: result.location,
+        googleMapsLink: result.googleMapsLink,
+      };
+    },
+    enabled: !!actor && !isFetching && enabled,
+  });
+}
+
+export interface RegisterProfileParams {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  googleMapsLink: string;
+}
+
+export function useRegisterProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, RegisterProfileParams>({
+    mutationFn: async (params) => {
+      if (!actor) throw new Error("Not connected to backend");
+      const result = await actor.registerCustomerProfile(
+        params.name,
+        params.email,
+        params.phone,
+        params.location,
+        params.googleMapsLink,
+      );
+      if ("err" in result) throw new Error(result.err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+  });
+}
+
 // ─── Export CSV ────────────────────────────────────────────────────────────
 
 export function useExportOrdersCSV() {

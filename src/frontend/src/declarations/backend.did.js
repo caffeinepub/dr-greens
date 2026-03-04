@@ -13,6 +13,15 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const CustomerProfile = IDL.Record({
+  'principal' : IDL.Principal,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Nat64,
+  'googleMapsLink' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
+  'location' : IDL.Text,
+});
 export const Order = IDL.Record({
   'id' : IDL.Nat,
   'customerName' : IDL.Text,
@@ -66,6 +75,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'exportOrdersCSV' : IDL.Func([], [IDL.Text], ['query']),
+  'getAllCustomerProfiles' : IDL.Func(
+      [],
+      [IDL.Vec(CustomerProfile)],
+      ['query'],
+    ),
   'getAllOrders' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Vec(Order)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getContactSubmissions' : IDL.Func(
@@ -73,6 +87,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(ContactSubmission)],
       ['query'],
     ),
+  'getMyProfile' : IDL.Func([], [IDL.Opt(CustomerProfile)], ['query']),
   'getOrderStats' : IDL.Func([], [Stats], ['query']),
   'getProductById' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
   'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
@@ -80,6 +95,11 @@ export const idlService = IDL.Service({
   'placeOrder' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      [],
+    ),
+  'registerCustomerProfile' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'submitContactForm' : IDL.Func(
@@ -106,6 +126,15 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const CustomerProfile = IDL.Record({
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Nat64,
+    'googleMapsLink' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
+    'location' : IDL.Text,
   });
   const Order = IDL.Record({
     'id' : IDL.Nat,
@@ -160,6 +189,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'exportOrdersCSV' : IDL.Func([], [IDL.Text], ['query']),
+    'getAllCustomerProfiles' : IDL.Func(
+        [],
+        [IDL.Vec(CustomerProfile)],
+        ['query'],
+      ),
     'getAllOrders' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Vec(Order)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getContactSubmissions' : IDL.Func(
@@ -167,6 +201,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ContactSubmission)],
         ['query'],
       ),
+    'getMyProfile' : IDL.Func([], [IDL.Opt(CustomerProfile)], ['query']),
     'getOrderStats' : IDL.Func([], [Stats], ['query']),
     'getProductById' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
     'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
@@ -174,6 +209,11 @@ export const idlFactory = ({ IDL }) => {
     'placeOrder' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        [],
+      ),
+    'registerCustomerProfile' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'submitContactForm' : IDL.Func(

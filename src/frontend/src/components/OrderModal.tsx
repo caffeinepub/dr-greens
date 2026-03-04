@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { PlaceOrderParams } from "@/hooks/useQueries";
-import type { Product } from "@/types";
+import type { CustomerProfile, Product } from "@/types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { CheckCircle2, Leaf, ShoppingBasket } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface OrderModalProps {
@@ -20,6 +20,7 @@ interface OrderModalProps {
   product: Product | null;
   onClose: () => void;
   placeOrderMutation: UseMutationResult<bigint, Error, PlaceOrderParams>;
+  customerProfile?: CustomerProfile | null;
 }
 
 interface FormState {
@@ -73,11 +74,24 @@ export function OrderModal({
   product,
   onClose,
   placeOrderMutation,
+  customerProfile,
 }: OrderModalProps) {
   const [form, setForm] = useState<FormState>(defaultForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [confirmedOrder, setConfirmedOrder] =
     useState<ConfirmedOrderInfo | null>(null);
+
+  // Pre-fill form from customer profile whenever modal opens
+  useEffect(() => {
+    if (open && customerProfile) {
+      setForm((prev) => ({
+        ...prev,
+        name: customerProfile.name || prev.name,
+        email: customerProfile.email || prev.email,
+        phone: customerProfile.phone || prev.phone,
+      }));
+    }
+  }, [open, customerProfile]);
 
   const isSubmitting = placeOrderMutation.isPending;
 

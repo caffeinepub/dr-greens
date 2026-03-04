@@ -18,6 +18,15 @@ export interface ContactSubmission {
   'message' : string,
   'phone' : string,
 }
+export interface CustomerProfile {
+  'principal' : Principal,
+  'name' : string,
+  'createdAt' : bigint,
+  'googleMapsLink' : string,
+  'email' : string,
+  'phone' : string,
+  'location' : string,
+}
 export interface Order {
   'id' : bigint,
   'customerName' : string,
@@ -61,9 +70,11 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'exportOrdersCSV' : ActorMethod<[], string>,
+  'getAllCustomerProfiles' : ActorMethod<[], Array<CustomerProfile>>,
   'getAllOrders' : ActorMethod<[[] | [string]], Array<Order>>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getContactSubmissions' : ActorMethod<[], Array<ContactSubmission>>,
+  'getMyProfile' : ActorMethod<[], [] | [CustomerProfile]>,
   'getOrderStats' : ActorMethod<[], Stats>,
   'getProductById' : ActorMethod<[bigint], [] | [Product]>,
   'getProducts' : ActorMethod<[], Array<Product>>,
@@ -71,6 +82,11 @@ export interface _SERVICE {
   'placeOrder' : ActorMethod<
     [bigint, string, string, string, bigint, string],
     { 'ok' : bigint } |
+      { 'err' : string }
+  >,
+  'registerCustomerProfile' : ActorMethod<
+    [string, string, string, string, string],
+    { 'ok' : null } |
       { 'err' : string }
   >,
   'submitContactForm' : ActorMethod<

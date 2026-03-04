@@ -1,83 +1,105 @@
+import { LoginModal } from "@/components/LoginModal";
 import { OrderModal } from "@/components/OrderModal";
 import { Toaster } from "@/components/ui/sonner";
-import { useGetProducts, useIsAdmin, usePlaceOrder } from "@/hooks/useQueries";
-import { AdminPanel } from "@/pages/AdminPanel";
+import { useLocalAuth } from "@/hooks/useLocalAuth";
+import { useGetProducts, usePlaceOrder } from "@/hooks/useQueries";
 import { Storefront } from "@/pages/Storefront";
-import type { OrderModalState, Product } from "@/types";
+import type { CustomerProfile, OrderModalState, Product } from "@/types";
 import { mapProduct } from "@/utils/mappers";
-import { useCallback, useEffect, useState } from "react";
-import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useCallback, useState } from "react";
 
 // ─── App ───────────────────────────────────────────────────────────────────
 
 export default function App() {
-  // Hash-based routing
-  const [hash, setHash] = useState(window.location.hash);
-  useEffect(() => {
-    const handler = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", handler);
-    return () => window.removeEventListener("hashchange", handler);
-  }, []);
-
-  const isAdminRoute =
-    hash === "#/admin" || hash === "#admin" || hash === "admin";
-
   const [orderModal, setOrderModal] = useState<OrderModalState>({
     open: false,
     product: null,
   });
 
-  const { identity, login, clear, isInitializing, isLoggingIn } =
-    useInternetIdentity();
-  const isLoggedIn = !!identity;
+  const {
+    user,
+    isLoggedIn,
+    login,
+    logout,
+    showLoginModal,
+    openLoginModal,
+    closeLoginModal,
+  } = useLocalAuth();
 
-  // Backend data
+  // Backend data — loads for everyone (no login required to browse)
   const { data: backendProducts = [], isLoading: productsLoading } =
     useGetProducts();
-  const { data: isAdmin = false, isLoading: adminCheckLoading } = useIsAdmin();
 
   const placeOrderMutation = usePlaceOrder();
+
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
 
   // Map backend products to frontend shape
   const products: Product[] = backendProducts.map(mapProduct);
 
-  // Open/close order modal — requires login
-  const handleOpenOrderModal = useCallback((product: Product) => {
-    setOrderModal({ open: true, product });
-  }, []);
+  // Map local user to CustomerProfile shape
+  const customerProfile: CustomerProfile | null = user
+    ? {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        location: user.location,
+        googleMapsLink: user.googleMapsLink,
+      }
+    : null;
+
+  // Open order modal — requires login
+  const handleOpenOrderModal = useCallback(
+    (product: Product) => {
+      if (!isLoggedIn) {
+        openLoginModal();
+        // Store which product was clicked so we can open order after login
+        setPendingProduct(product);
+        return;
+      }
+      setOrderModal({ open: true, product });
+    },
+    [isLoggedIn, openLoginModal],
+  );
 
   const handleCloseOrderModal = useCallback(() => {
     setOrderModal({ open: false, product: null });
   }, []);
 
+  function handleLoginComplete(userData: Parameters<typeof login>[0]) {
+    login(userData);
+    // If user was trying to order a product, open the order modal now
+    if (pendingProduct) {
+      setOrderModal({ open: true, product: pendingProduct });
+      setPendingProduct(null);
+    }
+  }
+
   return (
     <>
-      {isAdminRoute ? (
-        <AdminPanel
-          isLoggedIn={isLoggedIn}
-          isAdmin={isAdmin}
-          isInitializing={isInitializing || adminCheckLoading}
-          onNavigateStorefront={() => {
-            window.location.hash = "#/";
-          }}
-        />
-      ) : (
-        <Storefront
-          products={products}
-          isLoading={productsLoading}
-          onOrder={handleOpenOrderModal}
-          isLoggedIn={isLoggedIn}
-          isLoggingIn={isLoggingIn}
-          onLogin={login}
-          onLogout={clear}
-        />
-      )}
+      <Storefront
+        products={products}
+        isLoading={productsLoading}
+        onOrder={handleOpenOrderModal}
+        isLoggedIn={isLoggedIn}
+        onLogin={openLoginModal}
+        onLogout={logout}
+        customerName={user?.name}
+      />
 
       <OrderModal
         open={orderModal.open}
         product={orderModal.product}
         onClose={handleCloseOrderModal}
         placeOrderMutation={placeOrderMutation}
+        customerProfile={customerProfile}
+      />
+
+      <LoginModal
+        open={showLoginModal}
+        onClose={closeLoginModal}
+        onLogin={handleLoginComplete}
+        existingUser={user}
       />
 
       <Toaster position="top-right" richColors />

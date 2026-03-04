@@ -97,6 +97,15 @@ export interface Stats {
     totalRevenue: number;
     processingCount: bigint;
 }
+export interface CustomerProfile {
+    principal: Principal;
+    name: string;
+    createdAt: bigint;
+    googleMapsLink: string;
+    email: string;
+    phone: string;
+    location: string;
+}
 export interface Order {
     id: bigint;
     customerName: string;
@@ -144,9 +153,11 @@ export interface backendInterface {
         err: string;
     }>;
     exportOrdersCSV(): Promise<string>;
+    getAllCustomerProfiles(): Promise<Array<CustomerProfile>>;
     getAllOrders(statusFilter: string | null): Promise<Array<Order>>;
     getCallerUserRole(): Promise<UserRole>;
     getContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getMyProfile(): Promise<CustomerProfile | null>;
     getOrderStats(): Promise<Stats>;
     getProductById(id: bigint): Promise<Product | null>;
     getProducts(): Promise<Array<Product>>;
@@ -154,6 +165,13 @@ export interface backendInterface {
     placeOrder(productId: bigint, customerName: string, email: string, phone: string, quantity: bigint, notes: string): Promise<{
         __kind__: "ok";
         ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    registerCustomerProfile(name: string, email: string, phone: string, location: string, googleMapsLink: string): Promise<{
+        __kind__: "ok";
+        ok: null;
     } | {
         __kind__: "err";
         err: string;
@@ -180,7 +198,7 @@ export interface backendInterface {
         err: string;
     }>;
 }
-import type { Product as _Product, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { CustomerProfile as _CustomerProfile, Product as _Product, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -259,6 +277,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAllCustomerProfiles(): Promise<Array<CustomerProfile>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllCustomerProfiles();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllCustomerProfiles();
+            return result;
+        }
+    }
     async getAllOrders(arg0: string | null): Promise<Array<Order>> {
         if (this.processError) {
             try {
@@ -301,6 +333,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getMyProfile(): Promise<CustomerProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyProfile();
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyProfile();
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getOrderStats(): Promise<Stats> {
         if (this.processError) {
             try {
@@ -319,14 +365,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getProductById(arg0);
-                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getProductById(arg0);
-            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getProducts(): Promise<Array<Product>> {
@@ -367,14 +413,34 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, arg4, arg5);
-                return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.placeOrder(arg0, arg1, arg2, arg3, arg4, arg5);
-            return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n9(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async registerCustomerProfile(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerCustomerProfile(arg0, arg1, arg2, arg3, arg4);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerCustomerProfile(arg0, arg1, arg2, arg3, arg4);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async submitContactForm(arg0: string, arg1: string, arg2: string, arg3: string): Promise<{
@@ -387,14 +453,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.submitContactForm(arg0, arg1, arg2, arg3);
-                return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.submitContactForm(arg0, arg1, arg2, arg3);
-            return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n9(this._uploadFile, this._downloadFile, result);
         }
     }
     async updateOrderStatus(arg0: bigint, arg1: string): Promise<{
@@ -441,7 +507,10 @@ export class Backend implements backendInterface {
 function from_candid_UserRole_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n6(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Product]): Product | null {
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_CustomerProfile]): CustomerProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Product]): Product | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_variant_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -472,7 +541,7 @@ function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: bigint;
 } | {
     err: string;

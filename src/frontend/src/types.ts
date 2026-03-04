@@ -42,3 +42,11 @@ export interface ContactSubmission {
   message: string;
   date: string;
 }
+
+export interface CustomerProfile {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  googleMapsLink: string;
+}

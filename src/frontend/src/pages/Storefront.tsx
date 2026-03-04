@@ -30,9 +30,9 @@ interface StorefrontProps {
   isLoading?: boolean;
   onOrder: (product: Product) => void;
   isLoggedIn: boolean;
-  isLoggingIn?: boolean;
   onLogin: () => void;
   onLogout: () => void;
+  customerName?: string;
 }
 
 const FEATURES = [
@@ -158,7 +158,7 @@ function ContactSection() {
                 {
                   icon: MapPin,
                   label: "Location",
-                  value: "South Africa",
+                  value: "India",
                   href: null,
                 },
               ].map((item) => (
@@ -367,20 +367,11 @@ export function Storefront({
   isLoading,
   onOrder,
   isLoggedIn,
-  isLoggingIn,
   onLogin,
   onLogout,
+  customerName,
 }: StorefrontProps) {
   function handleOrderClick(product: Product) {
-    if (!isLoggedIn) {
-      toast.info("Please sign in to place an order.", {
-        action: {
-          label: "Sign In",
-          onClick: onLogin,
-        },
-      });
-      return;
-    }
     onOrder(product);
   }
 
@@ -426,10 +417,18 @@ export function Storefront({
             {/* Auth button */}
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
-                <span className="hidden sm:flex items-center gap-1.5 text-xs text-primary font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Signed In
-                </span>
+                {customerName && (
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-primary font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Hi, {customerName.split(" ")[0]}
+                  </span>
+                )}
+                {!customerName && (
+                  <span className="hidden sm:flex items-center gap-1.5 text-xs text-primary font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Signed In
+                  </span>
+                )}
                 <button
                   type="button"
                   data-ocid="nav.logout_button"
@@ -445,29 +444,12 @@ export function Storefront({
                 data-ocid="nav.login_button"
                 size="sm"
                 onClick={onLogin}
-                disabled={isLoggingIn}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-4 h-8 text-xs font-semibold gap-1.5"
               >
-                {isLoggingIn ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <LogIn className="w-3.5 h-3.5" />
-                )}
+                <LogIn className="w-3.5 h-3.5" />
                 Sign In
               </Button>
             )}
-
-            {/* Admin link — subtle */}
-            <button
-              type="button"
-              data-ocid="nav.admin_link"
-              onClick={() => {
-                window.location.hash = "#/admin";
-              }}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1"
-            >
-              Admin
-            </button>
           </nav>
         </div>
       </header>
@@ -507,9 +489,9 @@ export function Storefront({
               </h1>
 
               <p className="text-primary-foreground/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
-                Premium microgreens grown with care right here in South Africa.
-                Packed with nutrients, bursting with flavour — delivered fresh
-                to your door.
+                Premium microgreens grown with care right here in India. Packed
+                with nutrients, bursting with flavour — delivered fresh to your
+                door.
               </p>
 
               <div className="flex flex-wrap gap-4">
